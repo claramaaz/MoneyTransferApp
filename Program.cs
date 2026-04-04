@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using MoneyTransferApp.Data;
+
+
 namespace MoneyTransferApp
 {
     public class Program
@@ -8,6 +12,7 @@ namespace MoneyTransferApp
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             var app = builder.Build();
 
