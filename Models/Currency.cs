@@ -3,29 +3,31 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MoneyTransferApp.Models
 {
-    public class Currency
-    {
-        [Key]
-        [StringLength(5)]
-        public string Code { get; set; }  // "USD", "EUR"
+        public class Currency
+        {
+            // La clé primaire EST le code: "USD", "EUR", "LBP"
+            [Key]
+            [StringLength(5)]
+            public string Code { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(50)]
-        public string Name { get; set; }   // "US Dollar"
+            [Required]
+            [StringLength(50)]
+            public string Name { get; set; } = string.Empty;
 
-        [StringLength(10)]
-        public string Symbol { get; set; }  // "$", "€"
+            [StringLength(10)]
+            public string Symbol { get; set; } = string.Empty;
 
-        // Rate vs USD: EUR = 0.92, LBP = 89500
-        [Required]
-        [Column(TypeName = "decimal(18,6)")]
-        public decimal ExchangeRate { get; set; } = 1;
+            // Taux vs USD: EUR=0.92, LBP=89500
+            [Required]
+            [Column(TypeName = "decimal(18,6)")]
+            public decimal ExchangeRate { get; set; } = 1;
 
-        public bool IsActive { get; set; } = true;
+            public bool IsActive { get; set; } = true;
 
-        [StringLength(10)]
-        public string? FlagEmoji { get; set; }             // "🇺🇸"
+            [StringLength(10)]
+            public string? FlagEmoji { get; set; }
 
-        public DateTime LastUpdated { get; set; } = DateTime.Now;
-    }
+            public DateTime LastUpdated { get; set; } = DateTime.Now;
+        }
+    
 }

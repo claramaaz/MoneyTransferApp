@@ -8,11 +8,11 @@ namespace MoneyTransferApp.Models
         public int Id { get; set; }
 
         [Required]
-        public int UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         [Required]
         [StringLength(200)]
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
 
         // "transfer", "topup", "agent", "system"
         [StringLength(20)]

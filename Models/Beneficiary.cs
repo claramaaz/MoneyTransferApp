@@ -8,21 +8,22 @@ namespace MoneyTransferApp.Models
         [Key]
         public int Id { get; set; }
 
+        // Clé étrangère vers l'utilisateur (comme dans PDF 11 - ForeignKey UserId)
         [Required]
-        public int UserId { get; set; }
+        public string UserId { get; set; }
 
         [ForeignKey("UserId")]
-        public User User { get; set; } 
+        public User User { get; set; } = null!;
 
         [Required]
         [StringLength(100)]
-        public string FullName { get; set; } 
+        public string FullName { get; set; }
 
-        // Account-to-account transfer
+        // Pour transfert account-to-account
         [StringLength(20)]
         public string? AccountNumber { get; set; }
 
-        // OMT-style mobile transfer
+        // Pour transfert style OMT (par téléphone)
         [StringLength(20)]
         public string? PhoneNumber { get; set; }
 

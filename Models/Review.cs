@@ -9,12 +9,12 @@ namespace MoneyTransferApp.Models
         public int Id { get; set; }
 
         [Required]
-        public int UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
         [ForeignKey("UserId")]
         public User User { get; set; } = null!;
 
-        // 1 to 5 stars
+        // Note de 1 à 5 étoiles
         [Required]
         [Range(1, 5)]
         public int Rating { get; set; }
@@ -24,7 +24,7 @@ namespace MoneyTransferApp.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // Optional: link to a specific transaction
+        // Lien optionnel vers une transaction spécifique
         public int? TransactionId { get; set; }
 
         [ForeignKey("TransactionId")]

@@ -8,7 +8,7 @@ namespace MoneyTransferApp.Models
         [Key]
         public int Id { get; set; }
 
-        // e.g. "$0 – $100"
+        // Ex: "$0 – $100"
         [StringLength(50)]
         public string? Label { get; set; }
 
@@ -20,16 +20,16 @@ namespace MoneyTransferApp.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal MaxAmount { get; set; }
 
-        // Total rate: 2.5 = 2.5%
+        // Taux total: 2.5 signifie 2.5%
         [Required]
         [Column(TypeName = "decimal(5,2)")]
         public decimal Rate { get; set; }
 
-        // Agent gets this portion
+        // Part de l'agent
         [Column(TypeName = "decimal(5,2)")]
         public decimal AgentShare { get; set; }
 
-        // Platform keeps this portion
+        // Part de la plateforme
         [Column(TypeName = "decimal(5,2)")]
         public decimal PlatformShare { get; set; }
 
