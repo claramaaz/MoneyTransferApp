@@ -1,0 +1,16 @@
+﻿<nav style="background:#2D1B3B; padding: 10px 20px; display:flex; justify-content:space-between; align-items:center;">
+    <span style="color:#F5A623; font-weight:bold; font-size:1.2rem;">Admin Panel</span>
+    <div style="display:flex; gap:12px;">
+        <a asp-controller="Admin" asp-action="Dashboard" style="color:white; text-decoration:none;">Overview</a>
+        <a asp-controller="Admin" asp-action="Agents" style="color:white; text-decoration:none;">Agents</a>
+        <a asp-controller="Admin" asp-action="Commissions" style="color:white; text-decoration:none;">Commissions</a>
+        <a asp-controller="Admin" asp-action="Currencies" style="color:white; text-decoration:none;">Currencies</a>
+        <a asp-controller="Admin" asp-action="Reports" style="color:white; text-decoration:none;">Reports</a>
+        <a asp-controller="Admin" asp-action="Users" style="color:white; text-decoration:none;">Users</a>
+        <form asp-controller="Auth" asp-action="Logout" method="post" style="display:inline;">
+            <button type="submit" style="background:none; border:1px solid white; color:white; padding:2px 10px; border-radius:4px; cursor:pointer;">
+                Logout
+            </button>
+        </form>
+    </div>
+</nav>

@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "Register";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - TransferPay</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+<body>
+    <div class="container mt-5" style="max-width: 480px;">
+
+        <h2>Create Account</h2>
+
+        <div asp-validation-summary="All" class="text-danger"></div>
+
+        <form asp-action="Register" method="post">
+
+            <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="fullName" class="form-control" placeholder="John Doe" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" placeholder="you@email.com" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Preferred Currency</label>
+                <select name="preferredCurrency" class="form-control">
+                    <option value="USD">USD — US Dollar</option>
+                    <option value="EUR">EUR — Euro</option>
+                    <option value="LBP">LBP — Lebanese Pound</option>
+                    <option value="AED">AED — UAE Dirham</option>
+                    <option value="SAR">SAR — Saudi Riyal</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Min 8 characters" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Create Account</button>
+
+        </form>
+
+        <p class="mt-3">
+            Already have an account? <a asp-action="Login">Sign in</a>
+        </p>
+
+    </div>
+</body>
+</html>

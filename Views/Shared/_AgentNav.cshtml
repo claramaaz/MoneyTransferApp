@@ -1,0 +1,15 @@
+﻿<nav style="background:#1B3B2D; padding: 10px 20px; display:flex; justify-content:space-between; align-items:center;">
+    <span style="color:#00C896; font-weight:bold; font-size:1.2rem;">Agent Portal</span>
+    <div style="display:flex; gap:12px;">
+        <a asp-controller="Agent" asp-action="Dashboard" style="color:white; text-decoration:none;">Dashboard</a>
+        <a asp-controller="Agent" asp-action="CashOperations" style="color:white; text-decoration:none;">Cash Ops</a>
+        <a asp-controller="Agent" asp-action="Transactions" style="color:white; text-decoration:none;">Transactions</a>
+        <a asp-controller="Agent" asp-action="Commissions" style="color:white; text-decoration:none;">Commissions</a>
+        <a asp-controller="Agent" asp-action="Settings" style="color:white; text-decoration:none;">Settings</a>
+        <form asp-controller="Auth" asp-action="Logout" method="post" style="display:inline;">
+            <button type="submit" style="background:none; border:1px solid white; color:white; padding:2px 10px; border-radius:4px; cursor:pointer;">
+                Logout
+            </button>
+        </form>
+    </div>
+</nav>
