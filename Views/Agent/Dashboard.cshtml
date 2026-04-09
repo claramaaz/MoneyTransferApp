@@ -1,5 +1,77 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@* ============================================================
+   Views/Agent/Dashboard.cshtml
+   ============================================================ *@
+
+@model IEnumerable<MoneyTransferApp.Models.Transaction>
+
 @{
+    ViewData["Title"] = "Agent Dashboard";
 }
+
+@Html.Partial("_AgentNav")  @* ou colle le bloc <style>+<nav> de AgentNavbar.cshtml ici *@
+
+<div class="container">
+
+    <h2>Agent Dashboard</h2>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="number">@ViewBag.TodayTransactions</div>
+            <div class="label">Today's Transactions</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">$@ViewBag.TodayCommission</div>
+            <div class="label">Today's Commission</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#1565c0;">
+            <div class="number" style="color:#1565c0;">@(ViewBag.Agent?.StoreName ?? "—")</div>
+            <div class="label">Store Name</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <strong style="color:#1b5e20; margin-bottom:12px; display:block;">Quick Actions</strong>
+        <a asp-action="CashOperations" class="btn btn-success">Cash-In / Cash-Out</a>
+        &nbsp;
+        <a asp-action="Transactions" class="btn btn-primary">View Transactions</a>
+        &nbsp;
+        <a asp-action="Commissions" class="btn btn-secondary">My Commissions</a>
+    </div>
+
+    <h3 style="margin-bottom:12px; color:#1b5e20;">Recent Transactions</h3>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card"><p style="color:#888;">No transactions yet.</p></div>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Serial Number</th>
+                    <th>Amount</th>
+                    <th>Currency</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Commission</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model)
+                {
+                    <tr>
+                        <td>@t.SerialNumber</td>
+                        <td>@t.Amount</td>
+                        <td>@t.FromCurrency</td>
+                        <td>@t.Type</td>
+                        <td><span class="badge badge-@t.Status.ToString().ToLower()">@t.Status</span></td>
+                        <td>$@t.CommissionAmount</td>
+                        <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

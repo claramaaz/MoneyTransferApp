@@ -1,5 +1,64 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@* ============================================================
+   Views/Agent/Settings.cshtml
+   ============================================================ *@
+
+@model MoneyTransferApp.Models.Agent
+
 @{
+    ViewData["Title"] = "Agent Settings";
 }
+
+@Html.Partial("_AgentNav")
+
+<div class="container">
+
+    <h2>Agent Settings</h2>
+
+    @if (ViewBag.Success != null)
+    {
+        <div class="alert-success">@ViewBag.Success</div>
+    }
+
+    <div class="card" style="max-width:560px;">
+
+        @if (Model != null)
+        {
+            <form asp-action="UpdateProfile" asp-controller="Agent" method="post">
+
+                <div class="form-group">
+                    <label>Store Name</label>
+                    <input type="text" name="storeName" value="@Model.StoreName" required />
+                </div>
+
+                <div class="form-group">
+                    <label>Address</label>
+                    <input type="text" name="address" value="@Model.Address" />
+                </div>
+
+                <div class="form-group">
+                    <label>Working Hours</label>
+                    <input type="text" name="workingHours" value="@Model.WorkingHours" placeholder="e.g. Mon-Fri 9am-6pm" />
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                    <div class="form-group">
+                        <label>Latitude</label>
+                        <input type="number" name="latitude" step="0.0001" value="@Model.Latitude" />
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude</label>
+                        <input type="number" name="longitude" step="0.0001" value="@Model.Longitude" />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success">Save Changes</button>
+                <a asp-action="Dashboard" class="btn btn-secondary" style="margin-left:8px;">Back</a>
+
+            </form>
+        }
+        else
+        {
+            <p style="color:#888;">Agent profile not found.</p>
+        }
+    </div>
+</div>

@@ -1,5 +1,51 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@* ============================================================
+   Views/Agent/Transactions.cshtml
+   ============================================================ *@
+
+@model IEnumerable<MoneyTransferApp.Models.Transaction>
+
 @{
+    ViewData["Title"] = "My Transactions";
 }
+
+@Html.Partial("_AgentNav")
+
+<div class="container">
+
+    <h2>My Transactions</h2>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card"><p style="color:#888;">No transactions found.</p></div>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Serial Number</th>
+                    <th>Amount</th>
+                    <th>Currency</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Commission Earned</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var t in Model)
+                {
+                    <tr>
+                        <td>@t.SerialNumber</td>
+                        <td>@t.Amount</td>
+                        <td>@t.FromCurrency</td>
+                        <td>@t.Type</td>
+                        <td><span class="badge badge-@t.Status.ToString().ToLower()">@t.Status</span></td>
+                        <td>$@t.CommissionAmount</td>
+                        <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

@@ -1,5 +1,81 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@* ============================================================
+   Views/Agent/CashOperations.cshtml
+   ============================================================ *@
+
 @{
+    ViewData["Title"] = "Cash Operations";
 }
+
+@Html.Partial("_AgentNav")
+
+<div class="container">
+
+    <h2>Cash Operations</h2>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert-error">@ViewBag.Error</div>
+    }
+    @if (ViewBag.Success != null)
+    {
+        <div class="alert-success">@ViewBag.Success</div>
+    }
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+
+        @* --- CASH IN --- *@
+        <div class="card">
+            <h3 style="color:#2e7d32; margin-bottom:16px; border-left:3px solid #2e7d32; padding-left:10px;">
+                ↓ Cash-In
+            </h3>
+            <form asp-action="CashIn" asp-controller="Agent" method="post">
+                <div class="form-group">
+                    <label>Recipient Account Number</label>
+                    <input type="text" name="recipientAccount" placeholder="ACC-2026-XXXXX" required />
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" name="amount" step="0.01" min="1" placeholder="0.00" required />
+                </div>
+                <div class="form-group">
+                    <label>Currency</label>
+                    <select name="currency">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="LBP">LBP</option>
+                        <option value="AED">AED</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success" style="width:100%;">Process Cash-In</button>
+            </form>
+        </div>
+
+        @* --- CASH OUT --- *@
+        <div class="card">
+            <h3 style="color:#1565c0; margin-bottom:16px; border-left:3px solid #1565c0; padding-left:10px;">
+                ↑ Cash-Out
+            </h3>
+            <form asp-action="CashOut" asp-controller="Agent" method="post">
+                <div class="form-group">
+                    <label>Sender Account Number</label>
+                    <input type="text" name="senderAccount" placeholder="ACC-2026-XXXXX" required />
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" name="amount" step="0.01" min="1" placeholder="0.00" required />
+                </div>
+                <div class="form-group">
+                    <label>Currency</label>
+                    <select name="currency">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="LBP">LBP</option>
+                        <option value="AED">AED</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;">Process Cash-Out</button>
+            </form>
+        </div>
+
+    </div>
+</div>
