@@ -1,5 +1,126 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<MoneyTransferApp.Models.Commission>
+
 @{
+    ViewData["Title"] = "Commissions";
+    Layout = null;
 }
+@Html.Partial("_AdminNav")
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Commissions — Money Money Admin</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html, body { height:100%; font-family:'Segoe UI',sans-serif; background:#f0f4f8; color:#1a202c; }
+        .page-wrapper { display:flex; min-height:100vh; }
+        .sidebar { width:230px; min-height:100vh; flex-shrink:0; background:linear-gradient(180deg,#0d1b2a,#1a2744); display:flex; flex-direction:column; box-shadow:3px 0 15px rgba(0,0,0,0.25); }
+        .sidebar-brand { display:flex; align-items:center; gap:10px; padding:20px 18px 16px; border-bottom:1px solid rgba(255,255,255,0.08); text-decoration:none; }
+        .sidebar-brand img { width:36px; height:36px; }
+        .sidebar-brand-text .name { color:#fff; font-size:1.05rem; font-weight:700; }
+        .sidebar-brand-text .role { color:rgba(255,255,255,0.45); font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; }
+        .sidebar-nav { padding:14px 10px; flex:1; }
+        .sidebar-nav a { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; margin-bottom:3px; color:rgba(255,255,255,0.65); text-decoration:none; font-size:0.88rem; font-weight:500; }
+        .sidebar-nav a:hover, .sidebar-nav a.active { background:rgba(26,115,232,0.25); color:#fff; }
+        .sidebar-nav a .icon { font-size:1.05rem; width:20px; text-align:center; }
+        .sidebar-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:1.5px; color:rgba(255,255,255,0.28); padding:12px 12px 4px; font-weight:600; }
+        .sidebar-footer { padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08); }
+        .sidebar-footer form button { width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); padding:9px; border-radius:8px; cursor:pointer; font-size:0.86rem; font-weight:500; }
+        .sidebar-footer form button:hover { background:rgba(211,47,47,0.3); color:#fff; }
+        .main { flex:1; display:flex; flex-direction:column; }
+        .topbar { background:#fff; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+        .topbar-title { font-size:1.15rem; font-weight:700; }
+        .topbar-user { font-size:0.85rem; color:#718096; }
+        .content { padding:24px 28px; }
+        .section-title { font-size:1rem; font-weight:700; color:#2d3748; margin-bottom:14px; padding-left:10px; border-left:3px solid #1a73e8; }
+        .table-card { background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 8px rgba(0,0,0,0.07); }
+        .table-card table { width:100%; border-collapse:collapse; }
+        .table-card thead th { background:linear-gradient(135deg,#1a73e8,#0d5bca); color:#fff; padding:11px 16px; text-align:left; font-size:0.82rem; font-weight:600; text-transform:uppercase; }
+        .table-card tbody td { padding:11px 16px; border-bottom:1px solid #f0f4f8; font-size:0.9rem; vertical-align:middle; }
+        .table-card tbody tr:last-child td { border-bottom:none; }
+        .table-card tbody tr:hover td { background:#f7faff; }
+        input[type="number"] { width:85px; padding:6px 9px; border:1px solid #e2e8f0; border-radius:6px; font-size:0.88rem; }
+        input[type="number"]:focus { outline:none; border-color:#1a73e8; }
+        .btn-save { background:linear-gradient(135deg,#1a73e8,#0d5bca); color:#fff; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.83rem; font-weight:600; }
+        .btn-save:hover { opacity:0.88; }
+        .alert-success { background:#e6f4ea; border-left:4px solid #2e7d32; color:#1e7e34; padding:11px 15px; border-radius:7px; margin-bottom:16px; font-size:0.9rem; }
+        .card { background:#fff; border-radius:12px; padding:22px; box-shadow:0 1px 8px rgba(0,0,0,0.07); }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+    <aside class="sidebar">
+        <a class="sidebar-brand" asp-controller="Admin" asp-action="Dashboard">
+            <img src="~/images/logo.png" alt="Logo" />
+            <div class="sidebar-brand-text"><div class="name">Money Money</div><div class="role">Admin Panel</div></div>
+        </a>
+        <nav class="sidebar-nav">
+            <div class="sidebar-label">Main</div>
+            <a asp-controller="Admin" asp-action="Dashboard"><span class="icon">📊</span> Overview</a>
+            <div class="sidebar-label">Management</div>
+            <a asp-controller="Admin" asp-action="Agents"><span class="icon">🏪</span> Agents</a>
+            <a asp-controller="Admin" asp-action="Users"><span class="icon">👥</span> Users</a>
+            <div class="sidebar-label">Finance</div>
+            <a asp-controller="Admin" asp-action="Commissions" class="active"><span class="icon">💰</span> Commissions</a>
+            <a asp-controller="Admin" asp-action="Currencies"><span class="icon">💱</span> Currencies</a>
+            <a asp-controller="Admin" asp-action="Reports"><span class="icon">📈</span> Reports</a>
+        </nav>
+        <div class="sidebar-footer">
+            <form asp-controller="Auth" asp-action="Logout" method="post">
+                <button type="submit">🚪 Logout</button>
+            </form>
+        </div>
+    </aside>
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-title">Commission Structure</div>
+            <div class="topbar-user">Admin · @DateTime.Now.ToString("dd MMM yyyy")</div>
+        </div>
+        <div class="content">
+            @if (ViewBag.Success != null) { <div class="alert-success">@ViewBag.Success</div> }
+            <p class="section-title">Commission Tiers</p>
+            @if (Model == null || !Model.Any())
+            {
+                <div class="card"><p style="color:#a0aec0;">No commission tiers defined.</p></div>
+            }
+            else
+            {
+                <div class="table-card">
+                    <table>
+                        <thead>
+                            <tr><th>Tier</th><th>Min ($)</th><th>Max ($)</th><th>Agent Share (%)</th><th>Platform Share (%)</th><th>Action</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in Model)
+                                {
+                                    <form asp-action="UpdateCommission" method="post">
+                                        <tr>
+                                            <td><strong>@c.Label</strong></td>
+                                            <td>@c.MinAmount</td>
+                                            <td>@c.MaxAmount</td>
+
+                                            <td>
+                                                <input type="hidden" name="id" value="@c.Id" />
+                                                <input type="number" name="agentShare" value="@c.AgentShare" step="0.1" min="0" max="100" />
+                                            </td>
+
+                                            <td>
+                                                <input type="number" name="platformShare" value="@c.PlatformShare" step="0.1" min="0" max="100" />
+                                            </td>
+
+                                            <td>
+                                                <button type="submit" class="btn-save">Save</button>
+                                            </td>
+                                        </tr>
+                                    </form>
+                                }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -50,7 +50,7 @@ namespace MoneyTransferApp.Controllers
                 .Sum(t => t.Amount);
             ViewBag.Commission = agent.TotalCommissionEarned;
 
-            return View(agent);
+            return View(transactions);
         }
 
         [HttpGet]

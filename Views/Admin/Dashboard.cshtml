@@ -1,5 +1,247 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<MoneyTransferApp.Models.Transaction>
+
 @{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = null;
 }
+@Html.Partial("_AdminNav")
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Dashboard — Money Money Admin</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        @* ── RESET & BASE ── *@
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html, body { height:100%; font-family:'Segoe UI', sans-serif; background:#f0f4f8; color:#1a202c; }
+
+        @* ── LAYOUT ── *@
+        .page-wrapper { display:flex; min-height:100vh; }
+
+        @* ── SIDEBAR ── *@
+        .sidebar {
+            width:230px; min-height:100vh; flex-shrink:0;
+            background:linear-gradient(180deg, #0d1b2a 0%, #1a2744 100%);
+            display:flex; flex-direction:column;
+            box-shadow:3px 0 15px rgba(0,0,0,0.25);
+        }
+        .sidebar-brand {
+            display:flex; align-items:center; gap:10px;
+            padding:20px 18px 16px; border-bottom:1px solid rgba(255,255,255,0.08);
+            text-decoration:none;
+        }
+        .sidebar-brand img { width:36px; height:36px; }
+        .sidebar-brand-text .name { color:#fff; font-size:1.05rem; font-weight:700; }
+        .sidebar-brand-text .role { color:rgba(255,255,255,0.45); font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; }
+        .sidebar-nav { padding:14px 10px; flex:1; }
+        .sidebar-nav a {
+            display:flex; align-items:center; gap:10px;
+            padding:10px 12px; border-radius:8px; margin-bottom:3px;
+            color:rgba(255,255,255,0.65); text-decoration:none;
+            font-size:0.88rem; font-weight:500; transition:all 0.18s;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background:rgba(26,115,232,0.25); color:#fff;
+        }
+        .sidebar-nav a .icon { font-size:1.05rem; width:20px; text-align:center; }
+        .sidebar-label {
+            font-size:0.68rem; text-transform:uppercase; letter-spacing:1.5px;
+            color:rgba(255,255,255,0.28); padding:12px 12px 4px; font-weight:600;
+        }
+        .sidebar-footer { padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08); }
+        .sidebar-footer form button {
+            width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15);
+            color:rgba(255,255,255,0.7); padding:9px; border-radius:8px;
+            cursor:pointer; font-size:0.86rem; font-weight:500; transition:all 0.18s;
+        }
+        .sidebar-footer form button:hover { background:rgba(211,47,47,0.3); color:#fff; border-color:rgba(211,47,47,0.5); }
+
+        @* ── MAIN ── *@
+        .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+        .topbar {
+            background:#fff; padding:14px 28px; display:flex; align-items:center;
+            justify-content:space-between; border-bottom:1px solid #e2e8f0;
+            box-shadow:0 1px 4px rgba(0,0,0,0.06);
+        }
+        .topbar-title { font-size:1.15rem; font-weight:700; color:#1a202c; }
+        .topbar-user { font-size:0.85rem; color:#718096; }
+        .content { padding:24px 28px; overflow-y:auto; }
+
+        @* ── STATS ── *@
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:16px; margin-bottom:26px; }
+        .stat-card {
+            background:#fff; border-radius:12px; padding:20px 18px;
+            box-shadow:0 1px 8px rgba(0,0,0,0.07); border-top:3px solid #1a73e8;
+            transition:transform 0.18s;
+        }
+        .stat-card:hover { transform:translateY(-2px); }
+        .stat-card .s-label { font-size:0.78rem; color:#718096; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+        .stat-card .s-value { font-size:1.8rem; font-weight:700; color:#1a202c; }
+        .stat-card .s-sub { font-size:0.78rem; color:#a0aec0; margin-top:4px; }
+
+        @* ── SECTION ── *@
+        .section-title { font-size:1rem; font-weight:700; color:#2d3748; margin-bottom:14px; padding-left:10px; border-left:3px solid #1a73e8; }
+
+        @* ── TABLE ── *@
+        .table-card { background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 8px rgba(0,0,0,0.07); margin-bottom:24px; }
+        .table-card table { width:100%; border-collapse:collapse; }
+        .table-card thead th {
+            background:linear-gradient(135deg,#1a73e8,#0d5bca);
+            color:#fff; padding:11px 16px; text-align:left; font-size:0.82rem;
+            font-weight:600; text-transform:uppercase; letter-spacing:0.4px;
+        }
+        .table-card tbody td { padding:11px 16px; border-bottom:1px solid #f0f4f8; font-size:0.9rem; }
+        .table-card tbody tr:last-child td { border-bottom:none; }
+        .table-card tbody tr:hover td { background:#f7faff; }
+
+        @* ── BADGES ── *@
+        .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.76rem; font-weight:600; }
+        .badge-completed  { background:#e6f4ea; color:#1e7e34; }
+        .badge-pending    { background:#fff3e0; color:#e65100; }
+        .badge-failed     { background:#fce8e8; color:#c62828; }
+        .badge-cancelled  { background:#f3e5f5; color:#6a1b9a; }
+        .badge-approved   { background:#e6f4ea; color:#1e7e34; }
+        .badge-rejected   { background:#fce8e8; color:#c62828; }
+
+        @* ── BUTTONS ── *@
+        .btn { padding:7px 16px; border:none; border-radius:7px; cursor:pointer; font-size:0.84rem; font-weight:600; text-decoration:none; display:inline-block; transition:opacity 0.18s; }
+        .btn-primary { background:linear-gradient(135deg,#1a73e8,#0d5bca); color:#fff; }
+        .btn-success { background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; }
+        .btn-danger  { background:#d32f2f; color:#fff; }
+        .btn:hover   { opacity:0.88; }
+
+        @* ── FORMS ── *@
+        .card { background:#fff; border-radius:12px; padding:22px 24px; box-shadow:0 1px 8px rgba(0,0,0,0.07); margin-bottom:20px; }
+        .form-group { margin-bottom:14px; }
+        .form-group label { display:block; font-size:0.85rem; font-weight:600; color:#4a5568; margin-bottom:5px; }
+        .form-group input, .form-group select { width:100%; padding:9px 12px; border:1px solid #e2e8f0; border-radius:7px; font-size:0.9rem; }
+        .form-group input:focus, .form-group select:focus { outline:none; border-color:#1a73e8; }
+
+        @* ── ALERTS ── *@
+        .alert-success { background:#e6f4ea; border-left:4px solid #2e7d32; color:#1e7e34; padding:11px 15px; border-radius:7px; margin-bottom:16px; font-size:0.9rem; }
+        .alert-error   { background:#fce8e8; border-left:4px solid #c62828; color:#c62828; padding:11px 15px; border-radius:7px; margin-bottom:16px; font-size:0.9rem; }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+
+    @* ── SIDEBAR ── *@
+    <aside class="sidebar">
+        <a class="sidebar-brand" asp-controller="Admin" asp-action="Dashboard">
+            <img src="~/images/logo.png" alt="Logo" />
+            <div class="sidebar-brand-text">
+                <div class="name">Money Money</div>
+                <div class="role">Admin Panel</div>
+            </div>
+        </a>
+        <nav class="sidebar-nav">
+            <div class="sidebar-label">Main</div>
+            <a asp-controller="Admin" asp-action="Dashboard" class="active">
+                <span class="icon">📊</span> Overview
+            </a>
+            <div class="sidebar-label">Management</div>
+            <a asp-controller="Admin" asp-action="Agents">
+                <span class="icon">🏪</span> Agents
+            </a>
+            <a asp-controller="Admin" asp-action="Users">
+                <span class="icon">👥</span> Users
+            </a>
+            <div class="sidebar-label">Finance</div>
+            <a asp-controller="Admin" asp-action="Commissions">
+                <span class="icon">💰</span> Commissions
+            </a>
+            <a asp-controller="Admin" asp-action="Currencies">
+                <span class="icon">💱</span> Currencies
+            </a>
+            <a asp-controller="Admin" asp-action="Reports">
+                <span class="icon">📈</span> Reports
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <form asp-controller="Auth" asp-action="Logout" method="post">
+                <button type="submit">🚪 Logout</button>
+            </form>
+        </div>
+    </aside>
+
+    @* ── MAIN ── *@
+    <main class="main">
+        <div class="topbar">
+            <div class="topbar-title">Platform Overview</div>
+            <div class="topbar-user">Admin · @DateTime.Now.ToString("dd MMM yyyy")</div>
+        </div>
+        <div class="content">
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="s-label">Total Users</div>
+                    <div class="s-value">@ViewBag.TotalUsers</div>
+                    <div class="s-sub">Registered accounts</div>
+                </div>
+                <div class="stat-card" style="border-top-color:#2e7d32;">
+                    <div class="s-label">Total Agents</div>
+                    <div class="s-value">@ViewBag.TotalAgents</div>
+                    <div class="s-sub">Active partners</div>
+                </div>
+                <div class="stat-card" style="border-top-color:#e65100;">
+                    <div class="s-label">Pending Approvals</div>
+                    <div class="s-value" style="color:#e65100;">@ViewBag.PendingAgents</div>
+                    <div class="s-sub">Awaiting review</div>
+                </div>
+                <div class="stat-card">
+                    <div class="s-label">Transactions</div>
+                    <div class="s-value">@ViewBag.TotalTransactions</div>
+                    <div class="s-sub">All time</div>
+                </div>
+                <div class="stat-card" style="border-top-color:#2e7d32;">
+                    <div class="s-label">Total Volume</div>
+                    <div class="s-value" style="color:#2e7d32; font-size:1.4rem;">$@ViewBag.TotalVolume</div>
+                    <div class="s-sub">Platform total</div>
+                </div>
+            </div>
+
+            <p class="section-title">Recent Transactions</p>
+
+            @if (Model == null || !Model.Any())
+            {
+                <div class="card"><p style="color:#a0aec0;">No transactions yet.</p></div>
+            }
+            else
+            {
+                <div class="table-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Serial Number</th>
+                                <th>Amount</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model)
+                            {
+                                <tr>
+                                    <td><strong>@t.SerialNumber</strong></td>
+                                    <td>@t.Amount</td>
+                                    <td>@t.FromCurrency</td>
+                                    <td>@t.ToCurrency</td>
+                                    <td>@t.Type</td>
+                                    <td><span class="badge badge-@t.Status.ToString().ToLower()">@t.Status</span></td>
+                                    <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </main>
+</div>
+</body>
+</html>
+
