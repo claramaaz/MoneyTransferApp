@@ -9,57 +9,78 @@
     ViewData["Title"] = "Agent Settings";
 }
 
-@Html.Partial("_AgentNav")
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Settings - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
 
-<div class="container">
+    @Html.Partial("_AgentNav")
 
-    <h2>Agent Settings</h2>
+    <div class="mm-container">
 
-    @if (ViewBag.Success != null)
-    {
-        <div class="alert-success">@ViewBag.Success</div>
-    }
+        <p class="mm-page-title">Agent Settings</p>
+        <p class="mm-page-subtitle">Update your store profile and location</p>
 
-    <div class="card" style="max-width:560px;">
-
-        @if (Model != null)
+        @if (ViewBag.Success != null)
         {
-            <form asp-action="UpdateProfile" asp-controller="Agent" method="post">
-
-                <div class="form-group">
-                    <label>Store Name</label>
-                    <input type="text" name="storeName" value="@Model.StoreName" required />
-                </div>
-
-                <div class="form-group">
-                    <label>Address</label>
-                    <input type="text" name="address" value="@Model.Address" />
-                </div>
-
-                <div class="form-group">
-                    <label>Working Hours</label>
-                    <input type="text" name="workingHours" value="@Model.WorkingHours" placeholder="e.g. Mon-Fri 9am-6pm" />
-                </div>
-
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-                    <div class="form-group">
-                        <label>Latitude</label>
-                        <input type="number" name="latitude" step="0.0001" value="@Model.Latitude" />
-                    </div>
-                    <div class="form-group">
-                        <label>Longitude</label>
-                        <input type="number" name="longitude" step="0.0001" value="@Model.Longitude" />
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-success">Save Changes</button>
-                <a asp-action="Dashboard" class="btn btn-secondary" style="margin-left:8px;">Back</a>
-
-            </form>
+            <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
         }
-        else
-        {
-            <p style="color:#888;">Agent profile not found.</p>
-        }
+
+        <div class="mm-card" style="max-width:580px;">
+
+            @if (Model != null)
+            {
+                <form asp-action="UpdateProfile" asp-controller="Agent" method="post">
+
+                    <div class="mm-form-group">
+                        <label>Store Name</label>
+                        <input type="text" name="storeName" value="@Model.StoreName" required />
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>Address</label>
+                        <input type="text" name="address" value="@Model.Address" />
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>Phone Number</label>
+                        <input type="text" name="phone" value="@Model.Phone" placeholder="+961 ..." />
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>Working Hours</label>
+                        <input type="text" name="workingHours" value="@Model.WorkingHours" placeholder="e.g. Mon-Fri 9AM-6PM, Sat 10AM-4PM" />
+                    </div>
+
+                    <div class="mm-form-grid-2">
+                        <div class="mm-form-group">
+                            <label>Latitude</label>
+                            <input type="number" name="latitude" step="0.0001" value="@Model.Latitude" />
+                        </div>
+                        <div class="mm-form-group">
+                            <label>Longitude</label>
+                            <input type="number" name="longitude" step="0.0001" value="@Model.Longitude" />
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:8px;">
+                        <button type="submit" class="mm-btn mm-btn-teal">Save Changes</button>
+                        <a asp-action="Dashboard" class="mm-btn mm-btn-outline">Back</a>
+                    </div>
+
+                </form>
+            }
+            else
+            {
+                <div class="mm-alert mm-alert-error">Agent profile not found. Please contact admin.</div>
+            }
+
+        </div>
     </div>
-</div>
+</body>
+</html>

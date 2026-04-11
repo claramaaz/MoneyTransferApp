@@ -1,5 +1,5 @@
 ﻿@* ============================================================
-   Views/Agent/Dashboard.cshtml
+   Views/Agent/Dashboard.cshtml — Agent Dashboard MoneyMoney
    ============================================================ *@
 
 @model IEnumerable<MoneyTransferApp.Models.Transaction>
@@ -9,70 +9,121 @@
     ViewData["Title"] = "Agent Dashboard";
 }
 
-@Html.Partial("_AgentNav")  @* ou colle le bloc <style>+<nav> de AgentNavbar.cshtml ici *@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Dashboard - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
 
-<div class="container">
+    @Html.Partial("_AgentNav")
 
-    <h2>Agent Dashboard</h2>
+    <div class="mm-container">
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="number">@ViewBag.TodayTransactions</div>
-            <div class="label">Today's Transactions</div>
+        <p class="mm-page-title">Agent Dashboard</p>
+        <p class="mm-page-subtitle">@(ViewBag.Agent?.StoreName ?? "Your Store") &bull; @(ViewBag.Agent?.Id != null ? "AGT-" + ViewBag.Agent.Id.ToString("D4") : "")</p>
+
+        @* KPI Cards *@
+        <div class="mm-stats-grid">
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Today's Transactions</div>
+                    <div class="sc-value">@(ViewBag.TodayTransactions ?? 0)</div>
+                </div>
+                <div class="sc-icon blue">&#128101;</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Today's Volume</div>
+                    <div class="sc-value">$@(ViewBag.TodayVolume ?? "0.00")</div>
+                </div>
+                <div class="sc-icon teal">&#36;</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Week's Commissions</div>
+                    <div class="sc-value">$@(ViewBag.TodayCommission ?? "0.00")</div>
+                </div>
+                <div class="sc-icon green">&#8593;</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Active Customers</div>
+                    <div class="sc-value">@(ViewBag.ActiveCustomers ?? 0)</div>
+                </div>
+                <div class="sc-icon orange">&#128101;</div>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="number">$@ViewBag.TodayCommission</div>
-            <div class="label">Today's Commission</div>
+
+        @* Quick Actions *@
+        <div class="mm-action-grid">
+            <a asp-action="CashOperations" class="mm-action-card">
+                <div class="ac-icon blue">&#8645;</div>
+                <div class="ac-text">
+                    <div class="ac-title">Cash Operations</div>
+                    <div class="ac-desc">Manage cash-in and cash-out</div>
+                </div>
+            </a>
+            <a asp-action="Transactions" class="mm-action-card">
+                <div class="ac-icon purple">&#36;</div>
+                <div class="ac-text">
+                    <div class="ac-title">Transactions</div>
+                    <div class="ac-desc">View transaction history</div>
+                </div>
+            </a>
+            <a asp-action="Support" class="mm-action-card">
+                <div class="ac-icon green">&#128101;</div>
+                <div class="ac-text">
+                    <div class="ac-title">Customer Support</div>
+                    <div class="ac-desc">Help your customers</div>
+                </div>
+            </a>
         </div>
-        <div class="stat-card" style="border-top-color:#1565c0;">
-            <div class="number" style="color:#1565c0;">@(ViewBag.Agent?.StoreName ?? "—")</div>
-            <div class="label">Store Name</div>
+
+        @* Recent Transactions *@
+        <div class="mm-table-wrap">
+            <div class="mm-table-header">
+                <span class="th-title">Recent Transactions</span>
+                <a asp-action="Transactions" class="th-link">View All</a>
+            </div>
+
+            @if (Model == null || !Model.Any())
+            {
+                <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No transactions yet.</div>
+            }
+            else
+            {
+                <table class="mm-table">
+                    <tbody>
+                        @foreach (var t in Model.Take(5))
+                        {
+                            <tr>
+                                <td>
+                                    <div class="mm-txn-row">
+                                        <div class="mm-avatar @(t.Type == MoneyTransferApp.Models.TransactionType.CashIn ? "cash-in" : t.Type == MoneyTransferApp.Models.TransactionType.CashOut ? "cash-out" : "transfer")">
+                                            @(t.Type == MoneyTransferApp.Models.TransactionType.CashIn ? "↓" : t.Type == MoneyTransferApp.Models.TransactionType.CashOut ? "↑" : "⇄")
+                                        </div>
+                                        <div>
+                                            <div class="mm-txn-name">@(t.Sender?.FullName ?? t.RecipientName ?? "—")</div>
+                                            <div class="mm-txn-serial">@t.SerialNumber &bull; @t.CreatedAt.ToString("HH:mm")</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="mm-txn-amount">@t.Amount.ToString("C")</div>
+                                    <div class="mm-txn-commission">+@t.CommissionAmount.ToString("C") commission</div>
+                                </td>
+                                <td><span class="mm-badge @t.Status.ToString().ToLower()">@t.Status</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
         </div>
+
     </div>
-
-    <div class="card">
-        <strong style="color:#1b5e20; margin-bottom:12px; display:block;">Quick Actions</strong>
-        <a asp-action="CashOperations" class="btn btn-success">Cash-In / Cash-Out</a>
-        &nbsp;
-        <a asp-action="Transactions" class="btn btn-primary">View Transactions</a>
-        &nbsp;
-        <a asp-action="Commissions" class="btn btn-secondary">My Commissions</a>
-    </div>
-
-    <h3 style="margin-bottom:12px; color:#1b5e20;">Recent Transactions</h3>
-
-    @if (Model == null || !Model.Any())
-    {
-        <div class="card"><p style="color:#888;">No transactions yet.</p></div>
-    }
-    else
-    {
-        <table>
-            <thead>
-                <tr>
-                    <th>Serial Number</th>
-                    <th>Amount</th>
-                    <th>Currency</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Commission</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var t in Model)
-                {
-                    <tr>
-                        <td>@t.SerialNumber</td>
-                        <td>@t.Amount</td>
-                        <td>@t.FromCurrency</td>
-                        <td>@t.Type</td>
-                        <td><span class="badge badge-@t.Status.ToString().ToLower()">@t.Status</span></td>
-                        <td>$@t.CommissionAmount</td>
-                        <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</div>
+</body>
+</html>

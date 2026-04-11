@@ -8,140 +8,118 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <title>Reports — Money Money Admin</title>
+    <title>Reports - Money Money</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        html, body { height:100%; font-family:'Segoe UI',sans-serif; background:#f0f4f8; }
-        .page-wrapper { display:flex; min-height:100vh; }
-        .sidebar { width:230px; min-height:100vh; flex-shrink:0; background:linear-gradient(180deg,#0d1b2a,#1a2744); display:flex; flex-direction:column; box-shadow:3px 0 15px rgba(0,0,0,0.25); }
-        .sidebar-brand { display:flex; align-items:center; gap:10px; padding:20px 18px 16px; border-bottom:1px solid rgba(255,255,255,0.08); text-decoration:none; }
-        .sidebar-brand img { width:36px; height:36px; }
-        .sidebar-brand-text .name { color:#fff; font-size:1.05rem; font-weight:700; }
-        .sidebar-brand-text .role { color:rgba(255,255,255,0.45); font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; }
-        .sidebar-nav { padding:14px 10px; flex:1; }
-        .sidebar-nav a { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; margin-bottom:3px; color:rgba(255,255,255,0.65); text-decoration:none; font-size:0.88rem; font-weight:500; }
-        .sidebar-nav a:hover, .sidebar-nav a.active { background:rgba(26,115,232,0.25); color:#fff; }
-        .sidebar-nav a .icon { font-size:1.05rem; width:20px; text-align:center; }
-        .sidebar-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:1.5px; color:rgba(255,255,255,0.28); padding:12px 12px 4px; font-weight:600; }
-        .sidebar-footer { padding:14px 18px; border-top:1px solid rgba(255,255,255,0.08); }
-        .sidebar-footer form button { width:100%; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.7); padding:9px; border-radius:8px; cursor:pointer; font-size:0.86rem; font-weight:500; }
-        .sidebar-footer form button:hover { background:rgba(211,47,47,0.3); color:#fff; }
-        .main { flex:1; display:flex; flex-direction:column; }
-        .topbar { background:#fff; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e2e8f0; box-shadow:0 1px 4px rgba(0,0,0,0.06); }
-        .topbar-title { font-size:1.15rem; font-weight:700; }
-        .topbar-user { font-size:0.85rem; color:#718096; }
-        .content { padding:24px 28px; }
-        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:16px; margin-bottom:26px; }
-        .stat-card { background:#fff; border-radius:12px; padding:20px 18px; box-shadow:0 1px 8px rgba(0,0,0,0.07); border-top:3px solid #1a73e8; }
-        .stat-card .s-label { font-size:0.78rem; color:#718096; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
-        .stat-card .s-value { font-size:1.7rem; font-weight:700; color:#1a202c; }
-        .section-title { font-size:1rem; font-weight:700; color:#2d3748; margin-bottom:14px; padding-left:10px; border-left:3px solid #1a73e8; }
-        .table-card { background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 8px rgba(0,0,0,0.07); margin-bottom:26px; }
-        .table-card table { width:100%; border-collapse:collapse; }
-        .table-card thead th { background:linear-gradient(135deg,#1a73e8,#0d5bca); color:#fff; padding:11px 16px; text-align:left; font-size:0.82rem; font-weight:600; text-transform:uppercase; }
-        .table-card tbody td { padding:11px 16px; border-bottom:1px solid #f0f4f8; font-size:0.9rem; }
-        .table-card tbody tr:last-child td { border-bottom:none; }
-        .table-card tbody tr:hover td { background:#f7faff; }
-        .card { background:#fff; border-radius:12px; padding:22px; box-shadow:0 1px 8px rgba(0,0,0,0.07); }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+        body { background:#f4f7f9; }
+        .navbar { background:linear-gradient(135deg,#1565c0,#0d47a1); padding:0 28px; display:flex; justify-content:space-between; align-items:center; height:58px; box-shadow:0 2px 10px rgba(0,0,0,0.18); }
+        .navbar-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+        .navbar-brand img { width:34px; height:34px; }
+        .navbar-brand span { color:white; font-size:1.1rem; font-weight:700; }
+        .navbar-brand small { color:rgba(255,255,255,0.6); font-size:0.7rem; display:block; margin-top:-2px; }
+        .nav-links { display:flex; align-items:center; gap:4px; list-style:none; }
+        .nav-links a { color:rgba(255,255,255,0.85); text-decoration:none; font-size:0.88rem; padding:7px 13px; border-radius:6px; font-weight:500; }
+        .nav-links a:hover { background:rgba(255,255,255,0.15); }
+        .btn-logout { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.35); color:white; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.86rem; }
+        .container { max-width:1050px; margin:30px auto; padding:0 20px; }
+        h2 { margin-bottom:22px; color:#1565c0; font-size:1.4rem; border-left:4px solid #43a047; padding-left:12px; }
+        h3 { margin:22px 0 12px; color:#1565c0; font-size:1.05rem; }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(175px,1fr)); gap:16px; margin-bottom:26px; }
+        .stat-card { background:white; border-radius:10px; padding:20px 16px; text-align:center; box-shadow:0 1px 6px rgba(0,0,0,0.08); border-top:4px solid #1565c0; }
+        .stat-card .number { font-size:1.8rem; font-weight:700; color:#1565c0; }
+        .stat-card .label { font-size:0.82rem; color:#777; margin-top:4px; }
+        table { width:100%; border-collapse:collapse; background:white; border-radius:9px; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.07); margin-bottom:28px; }
+        th { background:linear-gradient(135deg,#1565c0,#0d47a1); color:white; padding:11px 15px; text-align:left; font-size:0.88rem; }
+        td { padding:10px 15px; border-bottom:1px solid #eef0f3; font-size:0.92rem; }
+        tr:last-child td { border-bottom:none; }
+        tr:hover td { background:#f0f4ff; }
+        .badge-approved { background:#e8f5e9; color:#2e7d32; padding:3px 10px; border-radius:20px; font-size:0.78rem; font-weight:600; }
+        .card { background:white; border-radius:10px; padding:20px; box-shadow:0 1px 6px rgba(0,0,0,0.07); }
     </style>
 </head>
 <body>
-<div class="page-wrapper">
-    <aside class="sidebar">
-        <a class="sidebar-brand" asp-controller="Admin" asp-action="Dashboard">
-            <img src="~/images/logo.png" alt="Logo" />
-            <div class="sidebar-brand-text"><div class="name">Money Money</div><div class="role">Admin Panel</div></div>
-        </a>
-        <nav class="sidebar-nav">
-            <div class="sidebar-label">Main</div>
-            <a asp-controller="Admin" asp-action="Dashboard"><span class="icon">📊</span> Overview</a>
-            <div class="sidebar-label">Management</div>
-            <a asp-controller="Admin" asp-action="Agents"><span class="icon">🏪</span> Agents</a>
-            <a asp-controller="Admin" asp-action="Users"><span class="icon">👥</span> Users</a>
-            <div class="sidebar-label">Finance</div>
-            <a asp-controller="Admin" asp-action="Commissions"><span class="icon">💰</span> Commissions</a>
-            <a asp-controller="Admin" asp-action="Currencies"><span class="icon">💱</span> Currencies</a>
-            <a asp-controller="Admin" asp-action="Reports" class="active"><span class="icon">📈</span> Reports</a>
-        </nav>
-        <div class="sidebar-footer">
-            <form asp-controller="Auth" asp-action="Logout" method="post">
-                <button type="submit">🚪 Logout</button>
-            </form>
-        </div>
-    </aside>
-    <main class="main">
-        <div class="topbar">
-            <div class="topbar-title">Platform Reports</div>
-            <div class="topbar-user">Admin · @DateTime.Now.ToString("dd MMM yyyy")</div>
-        </div>
-        <div class="content">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="s-label">Transactions</div>
-                    <div class="s-value">@ViewBag.TotalTransactions</div>
-                </div>
-                <div class="stat-card" style="border-top-color:#2e7d32;">
-                    <div class="s-label">Total Volume</div>
-                    <div class="s-value" style="color:#2e7d32; font-size:1.35rem;">$@ViewBag.TotalVolume</div>
-                </div>
-                <div class="stat-card">
-                    <div class="s-label">Users</div>
-                    <div class="s-value">@ViewBag.TotalUsers</div>
-                </div>
-                <div class="stat-card" style="border-top-color:#f9a825;">
-                    <div class="s-label">Avg Rating</div>
-                    <div class="s-value" style="color:#f9a825;">@(Math.Round((double)(ViewBag.AverageRating ?? 0.0), 1)) ★</div>
-                </div>
-            </div>
 
-            <p class="section-title">Top Agents</p>
-            @if (ViewBag.TopAgents != null)
-            {
-                <div class="table-card">
-                    <table>
-                        <thead><tr><th>Store Name</th><th>Contact</th><th>Total Transactions</th></tr></thead>
-                        <tbody>
-                            @foreach (MoneyTransferApp.Models.Agent a in ViewBag.TopAgents)
-                            {
-                                <tr>
-                                    <td><strong>@a.StoreName</strong></td>
-                                    <td>@a.OwnerName</td>
-                                    <td>@a.TotalCommissionEarned</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
+<div class="container">
 
-            <p class="section-title">User Reviews</p>
-            @if (Model == null || !Model.Any())
-            {
-                <div class="card"><p style="color:#a0aec0;">No reviews yet.</p></div>
-            }
-            else
-            {
-                <div class="table-card">
-                    <table>
-                        <thead><tr><th>User</th><th>Rating</th><th>Comment</th><th>Date</th></tr></thead>
-                        <tbody>
-                            @foreach (var r in Model)
-                            {
-                                <tr>
-                                    <td>@r.UserId</td>
-                                    <td style="color:#f9a825; font-weight:600;">@r.Rating ★</td>
-                                    <td>@r.Comment</td>
-                                    <td>@r.CreatedAt.ToString("dd/MM/yyyy")</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
+    <h2>Platform Reports</h2>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="number">@ViewBag.TotalTransactions</div>
+            <div class="label">Total Transactions</div>
         </div>
-    </main>
+        <div class="stat-card" style="border-top-color:#2e7d32;">
+            <div class="number" style="color:#2e7d32;">$@ViewBag.TotalVolume</div>
+            <div class="label">Total Volume</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">@ViewBag.TotalUsers</div>
+            <div class="label">Registered Users</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#f9a825;">
+            <div class="number" style="color:#f9a825;">@(Math.Round((double)(ViewBag.AverageRating ?? 0.0), 1)) ★</div>
+            <div class="label">Average Rating</div>
+        </div>
+    </div>
+
+    <h3>Top Agents</h3>
+
+    @if (ViewBag.TopAgents != null)
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Store Name</th>
+                    <th>Contact</th>
+                    <th>Total Transactions</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (MoneyTransferApp.Models.Agent agent in ViewBag.TopAgents)
+                {
+                    <tr>
+                        <td>@agent.StoreName</td>
+                        <td>@agent.OwnerName</td>
+                        <td>@agent.TotalCommissionEarned</td>
+                        <td><span class="badge-approved">Active</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h3>User Reviews</h3>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="card"><p style="color:#888;">No reviews yet.</p></div>
+    }
+    else
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td>@r.UserId</td>
+                        <td style="color:#f9a825; font-weight:600;">@r.Rating ★</td>
+                        <td>@r.Comment</td>
+                        <td>@r.CreatedAt.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 </div>
 </body>
 </html>

@@ -1,52 +1,51 @@
-﻿@* ============================================================
-   Views/Agent/Transactions.cshtml
-   ============================================================ *@
-
+﻿@* Views/Agent/Transactions.cshtml *@
 @model IEnumerable<MoneyTransferApp.Models.Transaction>
-
 @{
-    Layout = null;
-    ViewData["Title"] = "My Transactions";
+    Layout = null; ViewData["Title"] = "My Transactions";
 }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transactions - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @Html.Partial("_AgentNav")
+    <div class="mm-container">
+        <p class="mm-page-title">My Transactions</p>
+        <p class="mm-page-subtitle">All transactions processed through your store</p>
 
-@Html.Partial("_AgentNav")
-
-<div class="container">
-
-    <h2>My Transactions</h2>
-
-    @if (Model == null || !Model.Any())
-    {
-        <div class="card"><p style="color:#888;">No transactions found.</p></div>
-    }
-    else
-    {
-        <table>
-            <thead>
-                <tr>
-                    <th>Serial Number</th>
-                    <th>Amount</th>
-                    <th>Currency</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Commission Earned</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var t in Model)
-                {
-                    <tr>
-                        <td>@t.SerialNumber</td>
-                        <td>@t.Amount</td>
-                        <td>@t.FromCurrency</td>
-                        <td>@t.Type</td>
-                        <td><span class="badge badge-@t.Status.ToString().ToLower()">@t.Status</span></td>
-                        <td>$@t.CommissionAmount</td>
-                        <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</div>
+        <div class="mm-table-wrap">
+            <div class="mm-table-header"><span class="th-title">Transaction History</span></div>
+            @if (Model == null || !Model.Any())
+            {
+                <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No transactions found.</div>
+            }
+            else
+            {
+                <table class="mm-table">
+                    <thead>
+                        <tr><th>Serial Number</th><th>Amount</th><th>Currency</th><th>Type</th><th>Status</th><th>Commission</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in Model)
+                        {
+                            <tr>
+                                <td style="font-family:monospace; font-size:0.85rem;">@t.SerialNumber</td>
+                                <td style="font-weight:600;">@t.Amount.ToString("C")</td>
+                                <td>@t.FromCurrency</td>
+                                <td><span class="mm-badge active">@t.Type</span></td>
+                                <td><span class="mm-badge @t.Status.ToString().ToLower()">@t.Status</span></td>
+                                <td style="color:var(--mm-teal); font-weight:600;">+$@t.CommissionAmount</td>
+                                <td style="color:#6b7a8d; font-size:0.85rem;">@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</body>
+</html>

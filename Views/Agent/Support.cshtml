@@ -1,0 +1,107 @@
+﻿@* ============================================================
+   Views/Agent/Support.cshtml — Customer Support + Chatbot
+   Correspond au screenshot Figma image 3
+   ============================================================ *@
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Customer Support";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customer Support - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    @Html.Partial("_AgentNav")
+
+    <div class="mm-container">
+
+        <p class="mm-page-title">Customer Support</p>
+        <p class="mm-page-subtitle">Help your customers with their inquiries</p>
+
+        <div class="mm-chat-layout">
+
+            @* Liste des chats actifs *@
+            <div class="mm-chat-list">
+                <div class="mm-chat-list-header">Active Chats (3)</div>
+
+                <div class="mm-chat-item active" onclick="selectChat('Sarah Johnson')">
+                    <div class="mm-chat-item-name">Sarah Johnson</div>
+                    <div class="mm-chat-item-status">Active now</div>
+                </div>
+                <div class="mm-chat-item" onclick="selectChat('Michael Chen')">
+                    <div class="mm-chat-item-name">Michael Chen</div>
+                    <div class="mm-chat-item-status">Active now</div>
+                </div>
+                <div class="mm-chat-item" onclick="selectChat('Emily Davis')">
+                    <div class="mm-chat-item-name">Emily Davis</div>
+                    <div class="mm-chat-item-status">Active now</div>
+                </div>
+            </div>
+
+            @* Fenêtre de chat *@
+            <div class="mm-chat-window">
+                <div class="mm-chat-win-header">
+                    <span id="chatTitle">Chat with Sarah Johnson</span>
+                    <span class="bot-badge">&#129302; Chatbot Available</span>
+                </div>
+
+                <div class="mm-chat-messages" id="chatMessages">
+                    <div>
+                        <div class="mm-msg user">Hi, I need help with a transaction</div>
+                        <div class="mm-msg-meta" style="padding-left:4px;">14:32</div>
+                    </div>
+                    <div>
+                        <div class="mm-msg bot">
+                            <strong style="font-size:0.78rem; color:#0e72b0;">&#129302; Support Bot</strong><br>
+                            Hello! I'm the support assistant. An agent will be with you shortly. Can you provide the transaction ID?
+                        </div>
+                        <div class="mm-msg-meta" style="padding-left:4px;">14:32</div>
+                    </div>
+                </div>
+
+                <div class="mm-chat-input-row">
+                    <input class="mm-chat-input" id="msgInput" type="text" placeholder="Type your message..." />
+                    <button class="mm-chat-send" onclick="sendMessage()">&#9658;</button>
+                </div>
+
+                <div class="mm-chat-note">
+                    <strong>Note:</strong> Support chatbot feature would integrate with AI services like OpenAI or Dialogflow to provide automated customer support.
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+            function selectChat(name) {
+                document.getElementById('chatTitle').textContent = 'Chat with ' + name;
+                document.querySelectorAll('.mm-chat-item').forEach(el => el.classList.remove('active'));
+                event.currentTarget.classList.add('active');
+            }
+
+            function sendMessage() {
+                var input = document.getElementById('msgInput');
+                var msg = input.value.trim();
+                if (!msg) return;
+                var container = document.getElementById('chatMessages');
+                var div = document.createElement('div');
+                div.innerHTML = '<div class="mm-msg user">' + msg + '</div><div class="mm-msg-meta" style="padding-left:4px;">just now</div>';
+                container.appendChild(div);
+                input.value = '';
+                container.scrollTop = container.scrollHeight;
+            }
+
+            document.getElementById('msgInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+    </script>
+
+</body>
+</html>
