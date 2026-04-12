@@ -9,22 +9,18 @@ namespace MoneyTransferApp
 {
     public class Program
     {
-        // async Task Main — nécessaire pour appeler les Seeders
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // ── 1. Add services to the container ─────────────────────────
-
+            // ── 1. MVC ────────────────────────────────────────────
             builder.Services.AddControllersWithViews();
 
-            // ── 2. Database — ton code original ──────────────────────────
+            // ── 2. Database ───────────────────────────────────────
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            // ── 3. Identity (PDF 10, slides 4 et 8) ──────────────────────
-            // AddDefaultIdentity = AddIdentity + pages de base
-            // NE NÉCESSITE PAS Identity.UI si on fait nos propres vues
+            // ── 3. Identity (PDF 10) ──────────────────────────────
             builder.Services.AddDefaultIdentity<User>(options =>
             {
                 options.SignIn.RequireConfirmedAccount = false;
@@ -33,41 +29,39 @@ namespace MoneyTransferApp
                 options.Password.RequireUppercase = false;
                 options.Password.RequireNonAlphanumeric = false;
             })
-            .AddRoles<IdentityRole>()                        // PDF 10: pour gérer les rôles
-            .AddEntityFrameworkStores<ApplicationDbContext>();        // PDF 10: stocker dans EF Core
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
 
-            // Redirection si non connecté (PDF 10, slide 25)
             builder.Services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = "/Auth/Login";
                 options.AccessDeniedPath = "/Auth/Login";
             });
 
-            // ── 4. Repository Pattern — Dependency Injection ───────────────
-            // PDF 11 slide 19: AddScoped<IRepository<T>, ConcreteRepository>()
+            // ── 4. Repository Pattern (PDF 11) ────────────────────
             builder.Services.AddScoped<IRepository<TxModel>, TransactionRepository>();
             builder.Services.AddScoped<IRepository<Models.Beneficiary>, BeneficiaryRepository>();
             builder.Services.AddScoped<IRepository<Models.Agent>, AgentRepository>();
-
-            // Accès aux méthodes spécifiques (GetByUserIdAsync etc.)
             builder.Services.AddScoped<TransactionRepository>();
             builder.Services.AddScoped<BeneficiaryRepository>();
             builder.Services.AddScoped<AgentRepository>();
 
+            // ── 5. HttpClient pour les appels API Anthropic ────────
+            builder.Services.AddHttpClient();
+
             var app = builder.Build();
 
-            // ── 5. Seeders — PDF 10 slides 16-18 ─────────────────────────
+            // ── 6. Seeders ────────────────────────────────────────
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
-                // PDF 10 slide 17:
-                // RoleSeeder.SeedRolesAsync(services).Wait();
-                // UserSeeder.SeedUsersAsync(services).Wait();
                 await RoleSeeder.SeedRolesAsync(services);
                 await UserSeeder.SeedUsersAsync(services);
+                // NOUVEAU : seeder pour currencies, commissions, agents, reviews
+                await DataSeeder.SeedAsync(services);
             }
 
-            // ── 6. Configure the HTTP request pipeline ────────────────────
+            // ── 7. Pipeline ───────────────────────────────────────
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
@@ -76,12 +70,9 @@ namespace MoneyTransferApp
 
             app.UseHttpsRedirection();
             app.UseRouting();
-
-            app.UseAuthentication();  // ← AVANT UseAuthorization (PDF 10)
+            app.UseAuthentication();
             app.UseAuthorization();
-
             app.MapStaticAssets();
-
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}")

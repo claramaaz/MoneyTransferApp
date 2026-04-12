@@ -1,5 +1,8 @@
 ﻿@* ============================================================
    Views/Agent/Settings.cshtml
+   BUG 1 FIX : page accessible depuis nav + dashboard
+   BUG 2 FIX : asp-action="Settings" (pas "UpdateProfile")
+               + hidden input name="id" pour retrouver l'agent
    ============================================================ *@
 
 @model MoneyTransferApp.Models.Agent
@@ -24,18 +27,22 @@
     <div class="mm-container">
 
         <p class="mm-page-title">Agent Settings</p>
-        <p class="mm-page-subtitle">Update your store profile and location</p>
+        <p class="mm-page-subtitle">Update your store profile and location details</p>
 
         @if (ViewBag.Success != null)
         {
             <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
         }
 
-        <div class="mm-card" style="max-width:580px;">
+        @if (Model != null)
+        {
+            <div class="mm-card" style="max-width:600px;">
 
-            @if (Model != null)
-            {
-                <form asp-action="UpdateProfile" asp-controller="Agent" method="post">
+                @* BUG 2 FIX : asp-action="Settings" (correspond au [HttpPost] Settings() du controller) *@
+                <form asp-action="Settings" asp-controller="Agent" method="post">
+
+                    @* BUG 2 FIX : hidden input pour passer l'Id au controller (FindAsync(id)) *@
+                    <input type="hidden" name="id" value="@Model.Id" />
 
                     <div class="mm-form-group">
                         <label>Store Name</label>
@@ -54,7 +61,8 @@
 
                     <div class="mm-form-group">
                         <label>Working Hours</label>
-                        <input type="text" name="workingHours" value="@Model.WorkingHours" placeholder="e.g. Mon-Fri 9AM-6PM, Sat 10AM-4PM" />
+                        <input type="text" name="workingHours" value="@Model.WorkingHours"
+                               placeholder="e.g. Mon-Fri 9AM-6PM, Sat 10AM-4PM" />
                     </div>
 
                     <div class="mm-form-grid-2">
@@ -70,17 +78,30 @@
 
                     <div style="display:flex; gap:10px; margin-top:8px;">
                         <button type="submit" class="mm-btn mm-btn-teal">Save Changes</button>
-                        <a asp-action="Dashboard" class="mm-btn mm-btn-outline">Back</a>
+                        <a asp-action="Dashboard" class="mm-btn mm-btn-outline">Back to Dashboard</a>
                     </div>
 
                 </form>
-            }
-            else
-            {
-                <div class="mm-alert mm-alert-error">Agent profile not found. Please contact admin.</div>
-            }
+            </div>
 
-        </div>
+            @* Info carte statut *@
+            <div class="mm-card" style="max-width:600px; margin-top:16px;">
+                <div style="font-size:0.85rem; color:#6b7a8d;">
+                    <strong style="color:#1a2332;">Account Information</strong><br><br>
+                    <span>Agent ID : </span><strong>AGT-@Model.Id.ToString("D4")</strong><br>
+                    <span>Status : </span>
+                    <span class="mm-badge @Model.Status.ToString().ToLower()">@Model.Status</span><br>
+                    <span style="display:inline-block; margin-top:6px;">
+                        Registered : @Model.RegisteredAt.ToString("dd/MM/yyyy")
+                    </span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="mm-alert mm-alert-error">Agent profile not found. Please contact admin.</div>
+        }
+
     </div>
 </body>
 </html>

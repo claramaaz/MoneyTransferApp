@@ -1,5 +1,6 @@
 ﻿@* ============================================================
-   Views/Shared/_AgentNav.cshtml — Navbar Agent MoneyMoney
+   Views/Shared/_AgentNav.cshtml
+   BUG 1 FIX : lien Settings ajouté dans la navbar
    ============================================================ *@
 
 <nav class="mm-navbar agent">
@@ -16,6 +17,7 @@
         <li><a asp-controller="Agent" asp-action="Transactions">Transactions</a></li>
         <li><a asp-controller="Agent" asp-action="Commissions">Commissions</a></li>
         <li><a asp-controller="Agent" asp-action="Support">Support</a></li>
+        <li><a asp-controller="Agent" asp-action="Settings">Settings</a></li>
         <li>
             <form asp-controller="Auth" asp-action="Logout" method="post" style="display:inline;">
                 <button type="submit" class="mm-btn-logout">Logout</button>

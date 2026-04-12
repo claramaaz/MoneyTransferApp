@@ -1,94 +1,73 @@
 ﻿@model IEnumerable<MoneyTransferApp.Models.Commission>
-
 @{
-    ViewData["Title"] = "Commissions";
-    Layout = null;
+    Layout = null; ViewData["Title"] = "Commissions";
 }
-@Html.Partial("_AdminNav")
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Commissions - Money Money</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
-        body { background:#f4f7f9; }
-        .navbar { background:linear-gradient(135deg,#1565c0,#0d47a1); padding:0 28px; display:flex; justify-content:space-between; align-items:center; height:58px; box-shadow:0 2px 10px rgba(0,0,0,0.18); }
-        .navbar-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
-        .navbar-brand img { width:34px; height:34px; }
-        .navbar-brand span { color:white; font-size:1.1rem; font-weight:700; }
-        .navbar-brand small { color:rgba(255,255,255,0.6); font-size:0.7rem; display:block; margin-top:-2px; }
-        .nav-links { display:flex; align-items:center; gap:4px; list-style:none; }
-        .nav-links a { color:rgba(255,255,255,0.85); text-decoration:none; font-size:0.88rem; padding:7px 13px; border-radius:6px; font-weight:500; }
-        .nav-links a:hover { background:rgba(255,255,255,0.15); }
-        .btn-logout { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.35); color:white; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:0.86rem; }
-        .container { max-width:900px; margin:30px auto; padding:0 20px; }
-        h2 { margin-bottom:22px; color:#1565c0; font-size:1.4rem; border-left:4px solid #43a047; padding-left:12px; }
-        table { width:100%; border-collapse:collapse; background:white; border-radius:9px; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,0.07); }
-        th { background:linear-gradient(135deg,#1565c0,#0d47a1); color:white; padding:11px 15px; text-align:left; font-size:0.88rem; }
-        td { padding:10px 15px; border-bottom:1px solid #eef0f3; font-size:0.92rem; }
-        tr:last-child td { border-bottom:none; }
-        tr:hover td { background:#f0f4ff; }
-        input[type="number"] { width:80px; padding:5px 8px; border:1px solid #ccc; border-radius:5px; font-size:0.88rem; }
-        input:focus { outline:none; border-color:#1565c0; }
-        .btn-save { background:linear-gradient(135deg,#1565c0,#1976d2); color:white; border:none; padding:5px 13px; border-radius:5px; cursor:pointer; font-size:0.84rem; font-weight:600; }
-        .btn-save:hover { opacity:0.88; }
-        .card { background:white; border-radius:10px; padding:20px; box-shadow:0 1px 6px rgba(0,0,0,0.07); }
-        .alert-success { background:#e8f5e9; border-left:4px solid #2e7d32; color:#2e7d32; padding:11px 15px; border-radius:6px; margin-bottom:16px; font-size:0.92rem; }
-    </style>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+    @Html.Partial("_AdminNav")
+    <div class="mm-container">
 
-<div class="container">
+        <p class="mm-page-title">Commission Structure</p>
+        <p class="mm-page-subtitle">Manage transfer commission tiers and agent/platform splits</p>
 
-    <h2>Commission Structure</h2>
+        @if (ViewBag.Success != null)
+        {
+            <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
+        }
 
-    @if (ViewBag.Success != null) { <div class="alert-success">@ViewBag.Success</div> }
+        <div class="mm-table-wrap">
+            <div class="mm-table-header"><span class="th-title">Commission Tiers</span></div>
 
-    @if (Model == null || !Model.Any())
-    {
-        <div class="card"><p style="color:#888;">No commission tiers defined.</p></div>
-    }
-    else
-    {
-        <table>
-            <thead>
-                <tr>
-                    <th>Tier</th>
-                    <th>Min Amount ($)</th>
-                    <th>Max Amount ($)</th>
-                    <th>Agent Share (%)</th>
-                    <th>Platform Share (%)</th>
-                    <th>Save</th>
-                </tr>
-            </thead>
-            <tbody>
-                 @foreach (var c in Model)
-                {
-                <form asp-action="UpdateCommission" method="post">
-                    <tr>
-                        <td><strong>@c.Label</strong></td>
-                        <td>@c.MinAmount</td>
-                        <td>@c.MaxAmount</td>
-
-                        <td>
-                            <input type="hidden" name="id" value="@c.Id" />
-                            <input type="number" name="agentShare" value="@c.AgentShare" step="0.1" min="0" max="100" />
-                        </td>
-
-                        <td>
-                            <input type="number" name="platformShare" value="@c.PlatformShare" step="0.1" min="0" max="100" />
-                        </td>
-
-                        <td>
-                            <button type="submit" class="btn-save">Save</button>
-                        </td>
-                    </tr>
-                </form>
+            @if (Model == null || !Model.Any())
+            {
+                <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No commission tiers defined.</div>
             }
-            </tbody>
-        </table>
-    }
-</div>
+            else
+            {
+                <table class="mm-table">
+                    <thead>
+                        <tr>
+                            <th>Tier</th>
+                            <th>Min Amount ($)</th>
+                            <th>Max Amount ($)</th>
+                            <th>Total Rate (%)</th>
+                            <th>Agent Share (%)</th>
+                            <th>Platform Share (%)</th>
+                            <th>Save</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <form asp-action="UpdateCommission" method="post">
+                                <tr>
+                                    <td style="font-weight:600;">@(c.Label ?? $"${c.MinAmount}–${c.MaxAmount}")</td>
+                                    <td>@c.MinAmount</td>
+                                    <td>@c.MaxAmount</td>
+                                    <td style="color:var(--mm-blue); font-weight:600;">@c.Rate%</td>
+                                    <td>
+                                        <input type="hidden" name="id" value="@c.Id" />
+                                        <input type="number" name="agentShare" value="@c.AgentShare" step="0.01" min="0" max="100"
+                                               style="width:80px;padding:5px 8px;border:1.5px solid var(--mm-border);border-radius:6px;font-size:0.88rem;" />
+                                    </td>
+                                    <td style="color:var(--mm-teal); font-weight:600;">@c.PlatformShare%</td>
+                                    <td>
+                                        <button type="submit" class="mm-btn mm-btn-primary mm-btn-sm">Save</button>
+                                    </td>
+                                </tr>
+                            </form>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
 </body>
 </html>

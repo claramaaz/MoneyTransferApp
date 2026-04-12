@@ -1,156 +1,62 @@
 ﻿@{
-    Layout = null;   
+    Layout = null;
     ViewData["Title"] = "Register";
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Register - Money Money</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <style>
-        /* html, body { height: 100%; } */
-        body {
-            background: linear-gradient(135deg, #e3f0ff 0%, #e8f5e9 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', sans-serif;
-            padding: 30px 0;
-        }
-
-        .register-box {
-            background: white;
-            border-radius: 14px;
-            padding: 28px 30px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 4px 24px rgba(21, 101, 192, 0.12);
-        }
-
-        .logo-section {
-            text-align: center;
-            margin-bottom: 28px;
-        }
-
-        .logo-section img {
-            width: 44px;
-            height: 44px;
-            margin-bottom: 10px;
-        }
-
-        .logo-section h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #1565c0, #2e7d32);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 4px;
-        }
-
-        .logo-section p {
-            color: #777;
-            font-size: 0.9rem;
-        }
-
-        .form-label {
-            font-weight: 600;
-            color: #333;
-            font-size: 0.9rem;
-        }
-
-        .form-control {
-            border-radius: 7px;
-            border: 1px solid #ccc;
-            padding: 10px 13px;
-            font-size: 0.93rem;
-            transition: border-color 0.18s;
-        }
-
-        .form-control:focus {
-            border-color: #1565c0;
-            box-shadow: 0 0 0 3px rgba(21,101,192,0.1);
-        }
-
-        .btn-register {
-            width: 100%;
-            padding: 11px;
-            border: none;
-            border-radius: 7px;
-            background: linear-gradient(135deg, #1565c0, #2e7d32);
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.18s;
-            margin-top: 6px;
-        }
-
-        .btn-register:hover { opacity: 0.9; }
-
-        .bottom-link {
-            text-align: center;
-            margin-top: 18px;
-            font-size: 0.9rem;
-            color: #555;
-        }
-        
-        .mb-3 {
-            margin-bottom: 10px !important;   /* réduit l'espace entre champs */
-        }
-        .bottom-link a { color: #1565c0; font-weight: 600; text-decoration: none; }
-        .bottom-link a:hover { text-decoration: underline; }
-
-        .text-danger { font-size: 0.88rem; }
-    </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Account - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body>
+<body class="mm-auth-page">
 
-    <div class="register-box">
+    <div class="mm-auth-box">
 
-        <div class="logo-section">
+        <div class="mm-auth-logo">
             <img src="~/images/logo.png" alt="Money Money Logo" />
             <h1>Money Money</h1>
             <p>Create your account</p>
         </div>
 
-        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+        <div asp-validation-summary="All" style="font-size:0.85rem; color:#b91c1c; margin-bottom:12px;"></div>
 
         <form asp-action="Register" method="post">
 
-            <div class="mb-3">
-                <label class="form-label">Full Name</label>
-                <input type="text" name="fullName" class="form-control" placeholder="John Doe" required />
+            <div class="mm-form-group">
+                <label>Full Name</label>
+                <input type="text" name="fullName" placeholder="John Doe" required />
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" placeholder="you@email.com" required />
+            <div class="mm-form-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="you@email.com" required />
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Preferred Currency</label>
-                <select name="preferredCurrency" class="form-control">
-                    <option value="USD">USD — US Dollar</option>
-                    <option value="EUR">EUR — Euro</option>
-                    <option value="LBP">LBP — Lebanese Pound</option>
-                    <option value="AED">AED — UAE Dirham</option>
-                    <option value="SAR">SAR — Saudi Riyal</option>
-                    <option value="GBP">GBP — British Pound</option>
+            <div class="mm-form-group">
+                <label>Preferred Currency</label>
+                <select name="preferredCurrency">
+                    <option value="USD">🇺🇸 USD — US Dollar</option>
+                    <option value="EUR">🇪🇺 EUR — Euro</option>
+                    <option value="LBP">🇱🇧 LBP — Lebanese Pound</option>
+                    <option value="AED">🇦🇪 AED — UAE Dirham</option>
+                    <option value="SAR">🇸🇦 SAR — Saudi Riyal</option>
+                    <option value="GBP">🇬🇧 GBP — British Pound</option>
                 </select>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" placeholder="Min 8 characters" required />
+            <div class="mm-form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Min 8 characters" required />
             </div>
 
-            <button type="submit" class="btn-register">Create Account</button>
+            <button type="submit" class="mm-btn mm-btn-primary mm-btn-full">Create Account</button>
 
         </form>
 
-        <p class="bottom-link">
+        <p class="mm-auth-footer">
             Already have an account? <a asp-action="Login">Sign in</a>
         </p>
 

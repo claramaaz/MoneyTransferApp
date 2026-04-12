@@ -1,6 +1,7 @@
 ﻿@* ============================================================
-   Views/Agent/Support.cshtml — Customer Support + Chatbot
-   Correspond au screenshot Figma image 3
+   Views/Agent/Support.cshtml
+   BUG FIX chatbot : fetch vers /Agent/ChatProxy (serveur C#)
+   au lieu de api.anthropic.com directement (bloqué par CORS)
    ============================================================ *@
 
 @{
@@ -15,6 +16,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Customer Support - Money Money</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+            .chat-layout { display:grid; grid-template-columns:260px 1fr; gap:20px; align-items:start; }
+            .chat-list { background:white; border-radius:14px; border:1px solid #e2e8f0; overflow:hidden; }
+            .chat-list-header { padding:14px 18px; font-weight:600; font-size:0.95rem; border-bottom:1px solid #e2e8f0; }
+            .chat-item { padding:12px 18px; cursor:pointer; border-bottom:1px solid #e2e8f0; transition:background 0.12s; }
+            .chat-item:last-child { border-bottom:none; }
+            .chat-item:hover { background:#f8fbff; }
+            .chat-item.active { background:rgba(20,144,220,0.07); border-left:3px solid #1490dc; }
+            .chat-item-name { font-weight:500; font-size:0.9rem; }
+            .chat-item-status { font-size:0.78rem; color:#00b48c; }
+            .chat-window { background:white; border-radius:14px; border:1px solid #e2e8f0; display:flex; flex-direction:column; min-height:520px; }
+            .chat-win-header { padding:14px 20px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; }
+            .chat-win-header .title { font-weight:600; font-size:0.95rem; }
+            .chat-win-header .bot-badge { font-size:0.78rem; color:#1490dc; font-weight:500; background:rgba(20,144,220,0.08); padding:3px 10px; border-radius:20px; }
+            .chat-messages { flex:1; padding:20px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; max-height:380px; }
+            .msg-wrap { display:flex; flex-direction:column; }
+            .msg { max-width:75%; padding:10px 14px; border-radius:12px; font-size:0.88rem; line-height:1.55; }
+            .msg.user { background:#f0f4f8; color:#1a2332; align-self:flex-end; border-bottom-right-radius:4px; }
+            .msg.bot  { background:rgba(20,144,220,0.08); color:#1a2332; align-self:flex-start; border:1px solid rgba(20,144,220,0.15); border-bottom-left-radius:4px; }
+            .msg.typing { background:rgba(20,144,220,0.05); color:#6b7a8d; align-self:flex-start; font-style:italic; }
+            .msg-meta { font-size:0.7rem; color:#6b7a8d; margin-top:3px; }
+            .meta-right { text-align:right; }
+            .chat-input-row { padding:14px 18px; border-top:1px solid #e2e8f0; display:flex; gap:10px; align-items:center; }
+            .chat-input { flex:1; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:0.88rem; font-family:inherit; outline:none; }
+            .chat-input:focus { border-color:#1490dc; }
+            .chat-send { background:#1490dc; color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:0.95rem; transition:opacity 0.15s; }
+            .chat-send:hover { opacity:0.85; }
+            .chat-send:disabled { opacity:0.4; cursor:not-allowed; }
+            .chat-note { margin:8px 18px 14px; padding:10px 14px; background:rgba(20,144,220,0.05); border-radius:8px; font-size:0.78rem; color:#6b7a8d; border:1px solid rgba(20,144,220,0.1); }
+    </style>
 </head>
 <body>
 
@@ -23,56 +54,53 @@
     <div class="mm-container">
 
         <p class="mm-page-title">Customer Support</p>
-        <p class="mm-page-subtitle">Help your customers with their inquiries</p>
+        <p class="mm-page-subtitle">Help your customers — powered by Claude AI</p>
 
-        <div class="mm-chat-layout">
+        <div class="chat-layout">
 
-            @* Liste des chats actifs *@
-            <div class="mm-chat-list">
-                <div class="mm-chat-list-header">Active Chats (3)</div>
-
-                <div class="mm-chat-item active" onclick="selectChat('Sarah Johnson')">
-                    <div class="mm-chat-item-name">Sarah Johnson</div>
-                    <div class="mm-chat-item-status">Active now</div>
+            @* ─── Liste des chats ─── *@
+            <div class="chat-list">
+                <div class="chat-list-header">Active Chats</div>
+                <div class="chat-item active" onclick="selectCustomer('Sarah Johnson', this)">
+                    <div class="chat-item-name">Sarah Johnson</div>
+                    <div class="chat-item-status">Active now</div>
                 </div>
-                <div class="mm-chat-item" onclick="selectChat('Michael Chen')">
-                    <div class="mm-chat-item-name">Michael Chen</div>
-                    <div class="mm-chat-item-status">Active now</div>
+                <div class="chat-item" onclick="selectCustomer('Michael Chen', this)">
+                    <div class="chat-item-name">Michael Chen</div>
+                    <div class="chat-item-status">Active now</div>
                 </div>
-                <div class="mm-chat-item" onclick="selectChat('Emily Davis')">
-                    <div class="mm-chat-item-name">Emily Davis</div>
-                    <div class="mm-chat-item-status">Active now</div>
+                <div class="chat-item" onclick="selectCustomer('Emily Davis', this)">
+                    <div class="chat-item-name">Emily Davis</div>
+                    <div class="chat-item-status">Active now</div>
                 </div>
             </div>
 
-            @* Fenêtre de chat *@
-            <div class="mm-chat-window">
-                <div class="mm-chat-win-header">
-                    <span id="chatTitle">Chat with Sarah Johnson</span>
-                    <span class="bot-badge">&#129302; Chatbot Available</span>
+            @* ─── Fenêtre de chat ─── *@
+            <div class="chat-window">
+                <div class="chat-win-header">
+                    <span class="title" id="chatTitle">Chat with Sarah Johnson</span>
+                    <span class="bot-badge">&#129302; AI Support Active</span>
                 </div>
 
-                <div class="mm-chat-messages" id="chatMessages">
-                    <div>
-                        <div class="mm-msg user">Hi, I need help with a transaction</div>
-                        <div class="mm-msg-meta" style="padding-left:4px;">14:32</div>
-                    </div>
-                    <div>
-                        <div class="mm-msg bot">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="msg-wrap">
+                        <div class="msg bot">
                             <strong style="font-size:0.78rem; color:#0e72b0;">&#129302; Support Bot</strong><br>
-                            Hello! I'm the support assistant. An agent will be with you shortly. Can you provide the transaction ID?
+                            Hello! I'm the Money Money AI support assistant. I can help with transactions, balances, cash operations, and more. How can I help?
                         </div>
-                        <div class="mm-msg-meta" style="padding-left:4px;">14:32</div>
+                        <div class="msg-meta">now</div>
                     </div>
                 </div>
 
-                <div class="mm-chat-input-row">
-                    <input class="mm-chat-input" id="msgInput" type="text" placeholder="Type your message..." />
-                    <button class="mm-chat-send" onclick="sendMessage()">&#9658;</button>
+                <div class="chat-input-row">
+                    <input class="chat-input" id="msgInput" type="text"
+                           placeholder="Type your message..." autocomplete="off" />
+                    <button class="chat-send" id="sendBtn" onclick="sendMessage()">&#9658;</button>
                 </div>
 
-                <div class="mm-chat-note">
-                    <strong>Note:</strong> Support chatbot feature would integrate with AI services like OpenAI or Dialogflow to provide automated customer support.
+                <div class="chat-note">
+                    <strong>AI Support Bot</strong> — Powered by Claude AI (Anthropic).
+                    Handles: transfers, cash operations, commissions, currencies, account info.
                 </div>
             </div>
 
@@ -80,26 +108,95 @@
     </div>
 
     <script>
-            function selectChat(name) {
-                document.getElementById('chatTitle').textContent = 'Chat with ' + name;
-                document.querySelectorAll('.mm-chat-item').forEach(el => el.classList.remove('active'));
-                event.currentTarget.classList.add('active');
+            var conversationHistory = [];
+
+            function now() {
+                return new Date().toLocaleTimeString('en', {hour:'2-digit', minute:'2-digit'});
             }
 
-            function sendMessage() {
-                var input = document.getElementById('msgInput');
-                var msg = input.value.trim();
-                if (!msg) return;
-                var container = document.getElementById('chatMessages');
-                var div = document.createElement('div');
-                div.innerHTML = '<div class="mm-msg user">' + msg + '</div><div class="mm-msg-meta" style="padding-left:4px;">just now</div>';
-                container.appendChild(div);
-                input.value = '';
+            function selectCustomer(name, el) {
+                document.getElementById('chatTitle').textContent = 'Chat with ' + name;
+                document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
+                el.classList.add('active');
+                conversationHistory = [];
+                var c = document.getElementById('chatMessages');
+                c.innerHTML = '';
+                appendMsg(c, 'bot',
+                    '<strong style="font-size:0.78rem;color:#0e72b0;">&#129302; Support Bot</strong><br>' +
+                    'Hello ' + name + '! How can I help you today?', now());
+            }
+
+            function appendMsg(container, type, html, time) {
+                var wrap = document.createElement('div');
+                wrap.className = 'msg-wrap';
+                wrap.innerHTML =
+                    '<div class="msg ' + type + '">' + html + '</div>' +
+                    '<div class="msg-meta ' + (type === 'user' ? 'meta-right' : '') + '">' + time + '</div>';
+                container.appendChild(wrap);
                 container.scrollTop = container.scrollHeight;
             }
 
+            async function sendMessage() {
+                var input   = document.getElementById('msgInput');
+                var sendBtn = document.getElementById('sendBtn');
+                var msg     = input.value.trim();
+                if (!msg) return;
+
+                var c = document.getElementById('chatMessages');
+                appendMsg(c, 'user', msg, now());
+                input.value = '';
+                sendBtn.disabled = true;
+
+                // Indicateur de frappe
+                var typingWrap = document.createElement('div');
+                typingWrap.id = 'typing';
+                typingWrap.innerHTML = '<div class="msg typing">&#129302; Support Bot is typing...</div>';
+                c.appendChild(typingWrap);
+                c.scrollTop = c.scrollHeight;
+
+                conversationHistory.push({ role: 'user', content: msg });
+
+                try {
+                    // BUG FIX : appel vers /Agent/ChatProxy (serveur C#)
+                    // et NON vers api.anthropic.com directement (bloqué CORS)
+                    var response = await fetch('/Agent/ChatProxy', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ messages: conversationHistory })
+                    });
+
+                    var data = await response.json();
+
+                    // Supprimer l'indicateur
+                    var typingEl = document.getElementById('typing');
+                    if (typingEl) typingEl.remove();
+
+                    if (data.reply) {
+                        conversationHistory.push({ role: 'assistant', content: data.reply });
+                        appendMsg(c, 'bot',
+                            '<strong style="font-size:0.78rem;color:#0e72b0;">&#129302; Support Bot</strong><br>' +
+                            data.reply.replace(/\n/g, '<br>'),
+                            now());
+                    } else {
+                        throw new Error('empty reply');
+                    }
+
+                } catch (err) {
+                    var typingEl = document.getElementById('typing');
+                    if (typingEl) typingEl.remove();
+                    appendMsg(c, 'bot',
+                        '<strong style="font-size:0.78rem;color:#b91c1c;">&#9888; Bot</strong><br>' +
+                        'Sorry, I\'m temporarily unavailable. Please try again.',
+                        now());
+                }
+
+                sendBtn.disabled = false;
+                input.focus();
+            }
+
             document.getElementById('msgInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') sendMessage();
+                if (e.key === 'Enter' && !document.getElementById('sendBtn').disabled)
+                    sendMessage();
             });
     </script>
 
