@@ -1,14 +1,7 @@
-﻿@* ============================================================
-   Views/Agent/Dashboard.cshtml — Agent Dashboard MoneyMoney
-   ============================================================ *@
-
-@model IEnumerable<MoneyTransferApp.Models.Transaction>
-
+﻿@model IEnumerable<MoneyTransferApp.Models.Transaction>
 @{
-    Layout = null;
-    ViewData["Title"] = "Agent Dashboard";
+    Layout = null; ViewData["Title"] = "Agent Dashboard";
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,78 +11,59 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-
     @Html.Partial("_AgentNav")
-
     <div class="mm-container">
 
         <p class="mm-page-title">Agent Dashboard</p>
-        <p class="mm-page-subtitle">@(ViewBag.Agent?.StoreName ?? "Your Store") &bull; @(ViewBag.Agent?.Id != null ? "AGT-" + ViewBag.Agent.Id.ToString("D4") : "")</p>
+        <p class="mm-page-subtitle">
+            @(ViewBag.Agent?.StoreName ?? "Your Store")
+            &bull;
+            @(ViewBag.Agent != null ? "AGT-" + ((MoneyTransferApp.Models.Agent)ViewBag.Agent).Id.ToString("D4") : "")
+        </p>
 
-        @* KPI Cards *@
         <div class="mm-stats-grid">
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Today's Transactions</div>
-                    <div class="sc-value">@(ViewBag.TodayTransactions ?? 0)</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Today's Transactions</div><div class="sc-value">@(ViewBag.TodayTransactions ?? 0)</div></div>
                 <div class="sc-icon blue">&#128101;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Today's Volume</div>
-                    <div class="sc-value">$@(ViewBag.TodayVolume ?? "0.00")</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Today's Volume (USD)</div><div class="sc-value">@(ViewBag.TodayVolume ?? "0.00")</div></div>
                 <div class="sc-icon teal">&#36;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Week's Commissions</div>
-                    <div class="sc-value">$@(ViewBag.TodayCommission ?? "0.00")</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Today's Commission (USD)</div><div class="sc-value">@(ViewBag.TodayCommission ?? "0.00")</div></div>
                 <div class="sc-icon green">&#8593;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Active Customers</div>
-                    <div class="sc-value">@(ViewBag.ActiveCustomers ?? 0)</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Active Customers</div><div class="sc-value">@(ViewBag.ActiveCustomers ?? 0)</div></div>
                 <div class="sc-icon orange">&#128101;</div>
             </div>
         </div>
 
-        @* Quick Actions *@
         <div class="mm-action-grid">
             <a asp-action="CashOperations" class="mm-action-card">
                 <div class="ac-icon blue">&#8645;</div>
-                <div class="ac-text">
-                    <div class="ac-title">Cash Operations</div>
-                    <div class="ac-desc">Manage cash-in and cash-out</div>
-                </div>
+                <div class="ac-text"><div class="ac-title">Cash Operations</div><div class="ac-desc">Manage cash-in and cash-out</div></div>
             </a>
             <a asp-action="Transactions" class="mm-action-card">
                 <div class="ac-icon purple">&#36;</div>
-                <div class="ac-text">
-                    <div class="ac-title">Transactions</div>
-                    <div class="ac-desc">View transaction history</div>
-                </div>
+                <div class="ac-text"><div class="ac-title">Transactions</div><div class="ac-desc">View transaction history</div></div>
             </a>
             <a asp-action="Support" class="mm-action-card">
                 <div class="ac-icon green">&#128101;</div>
-                <div class="ac-text">
-                    <div class="ac-title">Customer Support</div>
-                    <div class="ac-desc">Help your customers</div>
-                </div>
+                <div class="ac-text"><div class="ac-title">Customer Support</div><div class="ac-desc">Help your customers</div></div>
+            </a>
+            <a asp-action="Settings" class="mm-action-card">
+                <div class="ac-icon" style="background:#6b7a8d; color:white;">&#9881;</div>
+                <div class="ac-text"><div class="ac-title">Settings</div><div class="ac-desc">Update store profile</div></div>
             </a>
         </div>
 
-        @* Recent Transactions *@
         <div class="mm-table-wrap">
             <div class="mm-table-header">
                 <span class="th-title">Recent Transactions</span>
                 <a asp-action="Transactions" class="th-link">View All</a>
             </div>
-
             @if (Model == null || !Model.Any())
             {
                 <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No transactions yet.</div>
@@ -104,7 +78,8 @@
                                 <td>
                                     <div class="mm-txn-row">
                                         <div class="mm-avatar @(t.Type == MoneyTransferApp.Models.TransactionType.CashIn ? "cash-in" : t.Type == MoneyTransferApp.Models.TransactionType.CashOut ? "cash-out" : "transfer")">
-                                            @(t.Type == MoneyTransferApp.Models.TransactionType.CashIn ? "↓" : t.Type == MoneyTransferApp.Models.TransactionType.CashOut ? "↑" : "⇄")
+                                            @(t.Type == MoneyTransferApp.Models.TransactionType.CashIn ? "↓" :
+                                              t.Type == MoneyTransferApp.Models.TransactionType.CashOut ? "↑" : "⇄")
                                         </div>
                                         <div>
                                             <div class="mm-txn-name">@(t.Sender?.FullName ?? t.RecipientName ?? "—")</div>
@@ -113,8 +88,12 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="mm-txn-amount">@t.Amount.ToString("C")</div>
-                                    <div class="mm-txn-commission">+@t.CommissionAmount.ToString("C") commission</div>
+                                    <div class="mm-txn-amount">@t.Amount.ToString("F2") @t.FromCurrency</div>
+                                    @if (t.FromCurrency != "USD")
+                                    {
+                                        <div style="font-size:0.75rem; color:#6b7a8d;">= @t.ConvertedAmount.ToString("F2") USD</div>
+                                    }
+                                    <div class="mm-txn-commission">+@t.CommissionAmount.ToString("F2") commission</div>
                                 </td>
                                 <td><span class="mm-badge @t.Status.ToString().ToLower()">@t.Status</span></td>
                             </tr>
@@ -123,7 +102,6 @@
                 </table>
             }
         </div>
-
     </div>
 </body>
 </html>

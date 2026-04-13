@@ -1,5 +1,4 @@
-﻿@* Views/Agent/Commissions.cshtml *@
-@model IEnumerable<MoneyTransferApp.Models.Transaction>
+﻿@model IEnumerable<MoneyTransferApp.Models.Transaction>
 @{
     Layout = null; ViewData["Title"] = "My Commissions";
 }
@@ -19,17 +18,11 @@
 
         <div class="mm-stats-grid" style="max-width:440px;">
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Total Earned</div>
-                    <div class="sc-value" style="color:var(--mm-teal);">$@ViewBag.TotalCommission</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Total Earned (USD)</div><div class="sc-value" style="color:var(--mm-teal);">@ViewBag.TotalCommission</div></div>
                 <div class="sc-icon teal">&#36;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Total Operations</div>
-                    <div class="sc-value">@(Model?.Count() ?? 0)</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Total Operations</div><div class="sc-value">@(Model?.Count() ?? 0)</div></div>
                 <div class="sc-icon blue">&#8645;</div>
             </div>
         </div>
@@ -44,16 +37,18 @@
             {
                 <table class="mm-table">
                     <thead>
-                        <tr><th>Transaction</th><th>Amount</th><th>Type</th><th>Commission Earned</th><th>Date</th></tr>
+                        <tr><th>Transaction</th><th>Amount</th><th>Currency</th><th>USD Equiv.</th><th>Type</th><th>Commission Earned</th><th>Date</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var t in Model)
                         {
                             <tr>
                                 <td style="font-family:monospace; font-size:0.85rem;">@t.SerialNumber</td>
-                                <td>@t.Amount @t.FromCurrency</td>
+                                <td>@t.Amount.ToString("F2")</td>
+                                <td>@t.FromCurrency</td>
+                                <td style="color:var(--mm-teal);">@t.ConvertedAmount.ToString("F2")</td>
                                 <td><span class="mm-badge active">@t.Type</span></td>
-                                <td style="color:var(--mm-teal); font-weight:600;">+$@t.CommissionAmount</td>
+                                <td style="color:var(--mm-teal); font-weight:600;">+@t.CommissionAmount.ToString("F2")</td>
                                 <td style="color:#6b7a8d; font-size:0.85rem;">@t.CreatedAt.ToString("dd/MM/yyyy")</td>
                             </tr>
                         }

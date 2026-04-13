@@ -1,5 +1,4 @@
-﻿@* Views/Agent/Transactions.cshtml *@
-@model IEnumerable<MoneyTransferApp.Models.Transaction>
+﻿@model IEnumerable<MoneyTransferApp.Models.Transaction>
 @{
     Layout = null; ViewData["Title"] = "My Transactions";
 }
@@ -27,18 +26,28 @@
             {
                 <table class="mm-table">
                     <thead>
-                        <tr><th>Serial Number</th><th>Amount</th><th>Currency</th><th>Type</th><th>Status</th><th>Commission</th><th>Date</th></tr>
+                        <tr>
+                            <th>Serial Number</th>
+                            <th>Amount</th>
+                            <th>Currency</th>
+                            <th>USD Equiv.</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Commission</th>
+                            <th>Date</th>
+                        </tr>
                     </thead>
                     <tbody>
                         @foreach (var t in Model)
                         {
                             <tr>
                                 <td style="font-family:monospace; font-size:0.85rem;">@t.SerialNumber</td>
-                                <td style="font-weight:600;">@t.Amount.ToString("C")</td>
+                                <td style="font-weight:600;">@t.Amount.ToString("F2")</td>
                                 <td>@t.FromCurrency</td>
+                                <td style="color:var(--mm-teal);">@t.ConvertedAmount.ToString("F2")</td>
                                 <td><span class="mm-badge active">@t.Type</span></td>
                                 <td><span class="mm-badge @t.Status.ToString().ToLower()">@t.Status</span></td>
-                                <td style="color:var(--mm-teal); font-weight:600;">+$@t.CommissionAmount</td>
+                                <td style="color:var(--mm-teal); font-weight:600;">+@t.CommissionAmount.ToString("F2")</td>
                                 <td style="color:#6b7a8d; font-size:0.85rem;">@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                             </tr>
                         }

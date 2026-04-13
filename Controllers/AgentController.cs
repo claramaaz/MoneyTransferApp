@@ -18,16 +18,14 @@ namespace MoneyTransferApp.Controllers
         private readonly AgentRepository _agentRepo;
         private readonly TransactionRepository _txRepo;
         private readonly ApplicationDbContext _db;
-        private readonly IConfiguration _config;
 
         public AgentController(UserManager<User> userManager, AgentRepository agentRepo,
-            TransactionRepository txRepo, ApplicationDbContext db, IConfiguration config)
+            TransactionRepository txRepo, ApplicationDbContext db)
         {
             _userManager = userManager;
             _agentRepo = agentRepo;
             _txRepo = txRepo;
             _db = db;
-            _config = config;
         }
 
         // ─────────────────────────────────────────────────────────
@@ -92,6 +90,12 @@ namespace MoneyTransferApp.Controllers
             return View();
         }
 
+        // ─────────────────────────────────────────────────────────
+        // CASH-IN
+        // FIX 1 : SerialNumber supprimé ici — généré UNE SEULE FOIS
+        //         dans TransactionRepository.AddAsync()
+        // FIX 2 : Notification créée après la transaction (brief prof)
+        // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> CashIn(string customerAccount, decimal amount, string currency)
         {
@@ -122,22 +126,19 @@ namespace MoneyTransferApp.Controllers
 
             // Commission
             decimal commissionAmount = 0m;
-            var commissionTier = await _db.Commissions
+            var tier = await _db.Commissions
                 .Where(c => c.IsActive && c.MinAmount <= amount && c.MaxAmount >= amount)
                 .FirstOrDefaultAsync();
-            if (commissionTier != null)
+            if (tier != null)
             {
-                commissionAmount = Math.Round(amount * commissionTier.Rate / 100m, 2);
-                agent.TotalCommissionEarned += Math.Round(amount * commissionTier.AgentShare / 100m, 2);
+                commissionAmount = Math.Round(amount * tier.Rate / 100m, 2);
+                agent.TotalCommissionEarned += Math.Round(amount * tier.AgentShare / 100m, 2);
                 _db.Agents.Update(agent);
             }
 
-            var serial = "TXN-" + DateTime.Now.ToString("yyyyMMdd") + "-" +
-                         Guid.NewGuid().ToString("N")[..6].ToUpper();
-
+            // FIX 1 : PAS de SerialNumber ici — le Repository le génère dans AddAsync()
             var tx = new TxModel
             {
-                SerialNumber = serial,
                 AgentId = agent.Id,
                 RecipientId = customer.Id,
                 Amount = amount,
@@ -152,13 +153,31 @@ namespace MoneyTransferApp.Controllers
             };
 
             await _txRepo.AddAsync(tx);
+            // Après AddAsync, tx.SerialNumber est maintenant rempli par le Repository
+
             customer.Balance += convertedAmount;
             await _userManager.UpdateAsync(customer);
 
-            TempData["Success"] = $"Cash-In OK! {serial} | {amount} {currency} = ${convertedAmount} USD";
+            // FIX 2 : Notification in-app pour le client (brief prof)
+            _db.Notifications.Add(new Notification
+            {
+                UserId = customer.Id,
+                Message = $"Cash-In received: {amount} {currency} = {convertedAmount:F2} USD. Serial: {tx.SerialNumber}",
+                Type = "topup",
+                IsRead = false,
+                CreatedAt = DateTime.Now
+            });
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = $"Cash-In OK! {tx.SerialNumber} | {amount} {currency} = {convertedAmount:F2} USD";
             return RedirectToAction("CashOperations");
         }
 
+        // ─────────────────────────────────────────────────────────
+        // CASH-OUT
+        // FIX 1 : SerialNumber supprimé ici — généré dans le Repository
+        // FIX 2 : Notification créée après la transaction
+        // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> CashOut(string customerAccount, decimal amount, string currency)
         {
@@ -188,27 +207,24 @@ namespace MoneyTransferApp.Controllers
 
             if (customer.Balance < convertedAmount)
             {
-                TempData["Error"] = $"Insufficient balance. Available: ${customer.Balance:F2}, Required: ${convertedAmount:F2}";
+                TempData["Error"] = $"Insufficient balance. Available: {customer.Balance:F2} USD, Required: {convertedAmount:F2} USD";
                 return RedirectToAction("CashOperations");
             }
 
             decimal commissionAmount = 0m;
-            var commissionTier = await _db.Commissions
+            var tier = await _db.Commissions
                 .Where(c => c.IsActive && c.MinAmount <= amount && c.MaxAmount >= amount)
                 .FirstOrDefaultAsync();
-            if (commissionTier != null)
+            if (tier != null)
             {
-                commissionAmount = Math.Round(amount * commissionTier.Rate / 100m, 2);
-                agent.TotalCommissionEarned += Math.Round(amount * commissionTier.AgentShare / 100m, 2);
+                commissionAmount = Math.Round(amount * tier.Rate / 100m, 2);
+                agent.TotalCommissionEarned += Math.Round(amount * tier.AgentShare / 100m, 2);
                 _db.Agents.Update(agent);
             }
 
-            var serial = "TXN-" + DateTime.Now.ToString("yyyyMMdd") + "-" +
-                         Guid.NewGuid().ToString("N")[..6].ToUpper();
-
+            // FIX 1 : PAS de SerialNumber ici
             var tx = new TxModel
             {
-                SerialNumber = serial,
                 AgentId = agent.Id,
                 SenderId = customer.Id,
                 Amount = amount,
@@ -223,10 +239,22 @@ namespace MoneyTransferApp.Controllers
             };
 
             await _txRepo.AddAsync(tx);
+
             customer.Balance -= convertedAmount;
             await _userManager.UpdateAsync(customer);
 
-            TempData["Success"] = $"Cash-Out OK! {serial} | {amount} {currency} = ${convertedAmount} USD";
+            // FIX 2 : Notification pour le client
+            _db.Notifications.Add(new Notification
+            {
+                UserId = customer.Id,
+                Message = $"Cash-Out processed: {amount} {currency} = {convertedAmount:F2} USD debited. Serial: {tx.SerialNumber}",
+                Type = "transfer",
+                IsRead = false,
+                CreatedAt = DateTime.Now
+            });
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = $"Cash-Out OK! {tx.SerialNumber} | {amount} {currency} = {convertedAmount:F2} USD";
             return RedirectToAction("CashOperations");
         }
 
@@ -300,53 +328,65 @@ namespace MoneyTransferApp.Controllers
         }
 
         // ─────────────────────────────────────────────────────────
-        // CHATBOT PROXY — appel serveur → Anthropic API
-        // BUG FIX chatbot : l'appel passe par le serveur ASP.NET
-        // pour éviter le blocage CORS du browser
+        // CHATBOT PROXY — Ollama local (gratuit)
         // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> ChatProxy([FromBody] AgentChatRequest request)
         {
-            var apiKey = _config["Anthropic:ApiKey"] ?? "";
+            var systemPrompt = "You are a helpful customer support assistant for Money Money, " +
+                "a money transfer application. Help customers with: transactions (serial numbers TXN-...), " +
+                "cash-in/cash-out, account balance (accounts ACC-...), currency conversion " +
+                "(USD, EUR, LBP, AED, SAR, GBP), commission fees, agent locations and working hours. " +
+                "Be concise, friendly, and professional. " +
+                "Respond in the same language the user writes in (French or English).";
 
-            if (string.IsNullOrEmpty(apiKey))
-                return Json(new { reply = "Chatbot not configured. Please add Anthropic:ApiKey to appsettings.json." });
-
-            using var http = new HttpClient();
-            http.DefaultRequestHeaders.Add("x-api-key", apiKey);
-            http.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-
-            var systemPrompt = @"You are a helpful customer support assistant for Money Money, 
-a money transfer application. You help customers with:
-- Transaction status (serial numbers like TXN-YYYYMMDD-XXXXXX)
-- Cash-in and cash-out operations
-- Account balance and account numbers (ACC-YYYY-XXXXX)
-- Currency conversion (USD, EUR, LBP, AED, SAR, GBP)
-- Commission fees
-- Agent store working hours and locations
-Be concise, friendly, and professional.
-Always respond in the same language the user writes in (French or English).";
+            var messages = new List<object>
+            {
+                new { role = "system", content = systemPrompt }
+            };
+            foreach (var m in request.Messages)
+                messages.Add(new { role = m.role, content = m.content });
 
             var body = new
             {
-                model = "claude-haiku-4-5-20251001",
-                max_tokens = 500,
-                system = systemPrompt,
-                messages = request.Messages
+                model = "llama3.2",
+                messages = messages,
+                stream = false
             };
 
-            var json = System.Text.Json.JsonSerializer.Serialize(body);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-            var response = await http.PostAsync("https://api.anthropic.com/v1/messages", content);
-            var raw = await response.Content.ReadAsStringAsync();
+            try
+            {
+                using var http = new HttpClient();
+                http.Timeout = TimeSpan.FromSeconds(60);
 
-            using var doc = System.Text.Json.JsonDocument.Parse(raw);
-            var reply = doc.RootElement
-                .GetProperty("content")[0]
-                .GetProperty("text")
-                .GetString() ?? "No response.";
+                var json = System.Text.Json.JsonSerializer.Serialize(body);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                var response = await http.PostAsync("http://localhost:11434/api/chat", content);
+                var raw = await response.Content.ReadAsStringAsync();
 
-            return Json(new { reply });
+                using var doc = System.Text.Json.JsonDocument.Parse(raw);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("message", out var messageProp) &&
+                    messageProp.TryGetProperty("content", out var contentProp))
+                    return Json(new { reply = contentProp.GetString() ?? "Empty response." });
+
+                if (root.TryGetProperty("response", out var responseProp))
+                    return Json(new { reply = responseProp.GetString() ?? "Empty response." });
+
+                if (root.TryGetProperty("error", out var errorProp))
+                    return Json(new { reply = "⚠️ Ollama error: " + errorProp.GetString() });
+
+                return Json(new { reply = "⚠️ Unexpected format: " + raw[..Math.Min(200, raw.Length)] });
+            }
+            catch (HttpRequestException)
+            {
+                return Json(new { reply = "⚠️ Ollama not running. Open a terminal and type: ollama serve" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { reply = "⚠️ Error: " + ex.Message });
+            }
         }
     }
 

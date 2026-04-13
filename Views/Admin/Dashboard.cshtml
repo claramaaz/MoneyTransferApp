@@ -1,14 +1,7 @@
-﻿@* ============================================================
-   Views/Admin/Dashboard.cshtml
-   ============================================================ *@
-
-@model IEnumerable<MoneyTransferApp.Models.Transaction>
-
+﻿@model IEnumerable<MoneyTransferApp.Models.Transaction>
 @{
-    Layout = null;
-    ViewData["Title"] = "Admin Dashboard";
+    Layout = null; ViewData["Title"] = "Admin Dashboard";
 }
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,48 +11,30 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-
     @Html.Partial("_AdminNav")
-
     <div class="mm-container">
-
         <p class="mm-page-title">Platform Overview</p>
         <p class="mm-page-subtitle">Monitor all activity across the Money Money platform</p>
 
         <div class="mm-stats-grid">
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Total Users</div>
-                    <div class="sc-value">@ViewBag.TotalUsers</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Total Users</div><div class="sc-value">@ViewBag.TotalUsers</div></div>
                 <div class="sc-icon blue">&#128101;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Total Agents</div>
-                    <div class="sc-value">@ViewBag.TotalAgents</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Total Agents</div><div class="sc-value">@ViewBag.TotalAgents</div></div>
                 <div class="sc-icon teal">&#127978;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Pending Approvals</div>
-                    <div class="sc-value" style="color:#c77800;">@ViewBag.PendingAgents</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Pending Approvals</div><div class="sc-value" style="color:#c77800;">@ViewBag.PendingAgents</div></div>
                 <div class="sc-icon orange">&#9203;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Transactions</div>
-                    <div class="sc-value">@ViewBag.TotalTransactions</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Transactions</div><div class="sc-value">@ViewBag.TotalTransactions</div></div>
                 <div class="sc-icon green">&#8645;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Total Volume</div>
-                    <div class="sc-value" style="color:var(--mm-teal);">$@ViewBag.TotalVolume</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Total Volume (USD)</div><div class="sc-value" style="color:var(--mm-teal);">@ViewBag.TotalVolume</div></div>
                 <div class="sc-icon teal">&#36;</div>
             </div>
         </div>
@@ -69,7 +44,6 @@
                 <span class="th-title">Recent Transactions</span>
                 <a asp-action="Reports" class="th-link">View Reports</a>
             </div>
-
             @if (Model == null || !Model.Any())
             {
                 <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No transactions yet.</div>
@@ -81,6 +55,7 @@
                         <tr>
                             <th>Serial Number</th>
                             <th>Amount</th>
+                            <th>USD Equiv.</th>
                             <th>From</th>
                             <th>To</th>
                             <th>Type</th>
@@ -93,7 +68,8 @@
                         {
                             <tr>
                                 <td style="font-family:monospace; font-size:0.85rem;">@t.SerialNumber</td>
-                                <td style="font-weight:600;">@t.Amount.ToString("C")</td>
+                                <td style="font-weight:600;">@t.Amount.ToString("F2") @t.FromCurrency</td>
+                                <td style="color:var(--mm-teal);">@t.ConvertedAmount.ToString("F2")</td>
                                 <td>@t.FromCurrency</td>
                                 <td>@t.ToCurrency</td>
                                 <td><span class="mm-badge active">@t.Type</span></td>
@@ -105,7 +81,6 @@
                 </table>
             }
         </div>
-
     </div>
 </body>
 </html>

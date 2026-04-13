@@ -13,7 +13,6 @@
 <body>
     @Html.Partial("_AdminNav")
     <div class="mm-container">
-
         <p class="mm-page-title">All Users</p>
         <p class="mm-page-subtitle">Manage all registered users on the platform</p>
 
@@ -22,7 +21,6 @@
                 <span class="th-title">User Accounts</span>
                 <span style="font-size:0.85rem; color:var(--mm-muted);">@(Model?.Count() ?? 0) total</span>
             </div>
-
             @if (Model == null || !Model.Any())
             {
                 <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No users registered yet.</div>
@@ -31,14 +29,7 @@
             {
                 <table class="mm-table">
                     <thead>
-                        <tr>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <th>Account Number</th>
-                            <th>Balance</th>
-                            <th>Currency</th>
-                            <th>Joined</th>
-                        </tr>
+                        <tr><th>Full Name</th><th>Email</th><th>Account Number</th><th>Balance (USD)</th><th>Currency</th><th>Joined</th></tr>
                     </thead>
                     <tbody>
                         @foreach (var u in Model)
@@ -54,7 +45,7 @@
                                 </td>
                                 <td style="color:var(--mm-muted); font-size:0.88rem;">@u.Email</td>
                                 <td style="font-family:monospace; font-size:0.85rem;">@u.AccountNumber</td>
-                                <td style="font-weight:600; color:var(--mm-teal);">@u.Balance.ToString("C")</td>
+                                <td style="font-weight:600; color:var(--mm-teal);">@u.Balance.ToString("F2")</td>
                                 <td><span class="mm-badge active">@u.PreferredCurrency</span></td>
                                 <td style="font-size:0.83rem; color:var(--mm-muted);">@u.CreatedAt.ToString("dd/MM/yyyy")</td>
                             </tr>

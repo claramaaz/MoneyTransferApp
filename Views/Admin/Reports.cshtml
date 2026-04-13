@@ -13,37 +13,24 @@
 <body>
     @Html.Partial("_AdminNav")
     <div class="mm-container">
-
         <p class="mm-page-title">Platform Reports</p>
         <p class="mm-page-subtitle">Overview of transactions, users, and user feedback</p>
 
         <div class="mm-stats-grid">
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Total Transactions</div>
-                    <div class="sc-value">@ViewBag.TotalTransactions</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Total Transactions</div><div class="sc-value">@ViewBag.TotalTransactions</div></div>
                 <div class="sc-icon blue">&#8645;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Total Volume</div>
-                    <div class="sc-value" style="color:var(--mm-teal);">$@ViewBag.TotalVolume</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Total Volume (USD)</div><div class="sc-value" style="color:var(--mm-teal);">@ViewBag.TotalVolume</div></div>
                 <div class="sc-icon teal">&#36;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Registered Users</div>
-                    <div class="sc-value">@ViewBag.TotalUsers</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Registered Users</div><div class="sc-value">@ViewBag.TotalUsers</div></div>
                 <div class="sc-icon green">&#128101;</div>
             </div>
             <div class="mm-stat-card">
-                <div class="sc-info">
-                    <div class="sc-label">Average Rating</div>
-                    <div class="sc-value" style="color:#c77800;">@(Math.Round((double)(ViewBag.AverageRating ?? 0.0), 1)) ★</div>
-                </div>
+                <div class="sc-info"><div class="sc-label">Average Rating</div><div class="sc-value" style="color:#c77800;">@ViewBag.AverageRating &#9733;</div></div>
                 <div class="sc-icon orange">&#9733;</div>
             </div>
         </div>
@@ -53,16 +40,14 @@
             <div class="mm-table-wrap" style="margin-bottom:24px;">
                 <div class="mm-table-header"><span class="th-title">Top Agents</span></div>
                 <table class="mm-table">
-                    <thead>
-                        <tr><th>Store Name</th><th>Owner</th><th>Total Commission Earned</th><th>Status</th></tr>
-                    </thead>
+                    <thead><tr><th>Store Name</th><th>Owner</th><th>Total Commission (USD)</th><th>Status</th></tr></thead>
                     <tbody>
                         @foreach (MoneyTransferApp.Models.Agent agent in ViewBag.TopAgents)
                         {
                             <tr>
                                 <td style="font-weight:600;">@agent.StoreName</td>
                                 <td>@agent.OwnerName</td>
-                                <td style="color:var(--mm-teal); font-weight:600;">$@agent.TotalCommissionEarned</td>
+                                <td style="color:var(--mm-teal); font-weight:600;">@agent.TotalCommissionEarned.ToString("F2")</td>
                                 <td><span class="mm-badge approved">Active</span></td>
                             </tr>
                         }
@@ -73,7 +58,6 @@
 
         <div class="mm-table-wrap">
             <div class="mm-table-header"><span class="th-title">User Reviews</span></div>
-
             @if (Model == null || !Model.Any())
             {
                 <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No reviews yet.</div>
@@ -81,19 +65,13 @@
             else
             {
                 <table class="mm-table">
-                    <thead>
-                        <tr><th>User</th><th>Rating</th><th>Comment</th><th>Date</th></tr>
-                    </thead>
+                    <thead><tr><th>User</th><th>Rating</th><th>Comment</th><th>Date</th></tr></thead>
                     <tbody>
                         @foreach (var r in Model)
                         {
                             <tr>
                                 <td>@(r.User?.FullName ?? r.UserId)</td>
-                                <td>
-                                    <span style="color:#c77800; font-weight:700;">
-                                        @string.Concat(Enumerable.Repeat("★", r.Rating))@string.Concat(Enumerable.Repeat("☆", 5 - r.Rating))
-                                    </span>
-                                </td>
+                                <td><span style="color:#c77800; font-weight:700;">@string.Concat(Enumerable.Repeat("★", r.Rating))@string.Concat(Enumerable.Repeat("☆", 5 - r.Rating))</span></td>
                                 <td style="color:#6b7a8d;">@(r.Comment ?? "—")</td>
                                 <td style="font-size:0.83rem; color:#6b7a8d;">@r.CreatedAt.ToString("dd/MM/yyyy")</td>
                             </tr>
