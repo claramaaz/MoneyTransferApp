@@ -1,6 +1,46 @@
-﻿@{
+﻿@* ============================================================
+   Views/Auth/Login.cshtml
+   Mis à jour : affiche le rôle sélectionné depuis la page d'accueil
+   Fidèle au cours Identity PDF 10 :
+   - SignInManager.PasswordSignInAsync()
+   - Redirection par rôle : [Authorize(Roles = Roles.Admin/Agent/User)]
+   ============================================================ *@
+
+@{
     Layout = null;
-    ViewData["Title"] = "Login";
+    var role = ViewBag.Role as string ?? "";
+    var roleLabel = role switch
+    {
+        "Admin" => "Admin Panel",
+        "Agent" => "Agent Portal",
+        _ => "User Portal"
+    };
+    var roleColor = role switch
+    {
+        "Admin" => "#1490dc",
+        "Agent" => "#00b48c",
+        _ => "#14c878"
+    };
+    var roleIcon = role switch
+    {
+        "Admin" => "⚙️",
+        "Agent" => "🏪",
+        _ => "👤"
+    };
+    // Emails de suggestion selon le rôle (pour la démo)
+    var hintEmail = role switch
+    {
+        "Admin" => "admin@moneymoney.com",
+        "Agent" => "agent@moneymoney.com",
+        _ => "user@moneymoney.com"
+    };
+    var hintPassword = role switch
+    {
+        "Admin" => "Admin@12345",
+        "Agent" => "Agent@12345",
+        _ => "User@12345"
+    };
+    ViewData["Title"] = "Sign In - Money Money";
 }
 
 <!DOCTYPE html>
@@ -15,41 +55,85 @@
 
     <div class="mm-auth-box">
 
+        @* Logo + titre *@
         <div class="mm-auth-logo">
             <img src="~/images/logo.png" alt="Money Money Logo" />
             <h1>Money Money</h1>
-            <p>Sign in to your account</p>
+
+            @* Badge de rôle si sélectionné depuis la landing page *@
+            @if (!string.IsNullOrEmpty(role))
+            {
+                <div style="display:inline-flex; align-items:center; gap:6px; background:@(roleColor)15; border:1.5px solid @(roleColor)40; color:@roleColor; padding:5px 14px; border-radius:20px; font-size:0.82rem; font-weight:600; margin-top:8px;">
+                    @roleIcon @roleLabel
+                </div>
+            }
+            else
+            {
+                <p style="color:#6b7a8d; font-size:0.88rem; margin-top:6px;">Sign in to your account</p>
+            }
         </div>
 
+        @* Message d'erreur *@
         @if (ViewBag.Error != null)
         {
             <div class="mm-alert mm-alert-error">@ViewBag.Error</div>
         }
 
-        <form asp-action="Login" method="post">
+        @* Formulaire — cours PDF 10 : PasswordSignInAsync *@
+        <form asp-action="Login" asp-controller="Auth" method="post">
+
+            @* Passe le rôle au controller pour la redirection *@
+            <input type="hidden" name="role" value="@role" />
 
             <div class="mm-form-group">
                 <label>Email</label>
-                <input type="email" name="email" placeholder="you@email.com" required />
+                <input type="email" name="email"
+                       placeholder="@hintEmail"
+                       required autocomplete="email" />
             </div>
 
             <div class="mm-form-group">
                 <label>Password</label>
-                <input type="password" name="password" placeholder="••••••••" required />
+                <input type="password" name="password"
+                       placeholder="••••••••"
+                       required autocomplete="current-password" />
             </div>
 
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:18px;">
-                <input type="checkbox" name="rememberMe" id="rememberMe" style="width:auto;" />
-                <label for="rememberMe" style="font-weight:400; font-size:0.88rem; color:#6b7a8d; margin-bottom:0;">Remember me</label>
+                <input type="checkbox" name="rememberMe" id="rememberMe"
+                       style="width:auto;" />
+                <label for="rememberMe"
+                       style="font-weight:400; font-size:0.88rem; color:#6b7a8d; margin-bottom:0;">
+                    Remember me
+                </label>
             </div>
 
-            <button type="submit" class="mm-btn mm-btn-primary mm-btn-full">Sign In</button>
+            <button type="submit" class="mm-btn mm-btn-full"
+                    style="background:@(string.IsNullOrEmpty(role) ? "#1490dc" : roleColor); color:white; padding:10px; border-radius:8px; font-size:0.9rem; font-weight:600; border:none; cursor:pointer;">
+                Sign In
+            </button>
 
         </form>
 
-        <p class="mm-auth-footer">
-            New here? <a asp-action="Register">Create an account</a>
-        </p>
+        @* Hint compte de test pour la démo *@
+        @if (!string.IsNullOrEmpty(role))
+        {
+            <div class="mm-alert mm-alert-info" style="margin-top:14px; font-size:0.78rem;">
+                <strong>Test account:</strong> @hintEmail / @hintPassword
+            </div>
+        }
+
+        <div class="mm-auth-footer" style="margin-top:16px;">
+            @if (!string.IsNullOrEmpty(role))
+            {
+                <a asp-controller="Home" asp-action="Index"
+                   style="color:#6b7a8d; font-size:0.83rem;">← Back to role selection</a>
+            }
+            else
+            {
+                <span>New here? <a asp-action="Register">Create an account</a></span>
+            }
+        </div>
 
     </div>
 

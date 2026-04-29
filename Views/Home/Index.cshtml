@@ -1,8 +1,206 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@* ============================================================
+   Views/Home/Index.cshtml — Page d'accueil avec choix de rôle
+   Fidèle au cours Identity (PDF 10) :
+   - 3 rôles : Admin, Agent, User
+   - Redirige vers Login avec le rôle présélectionné
+   ============================================================ *@
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Welcome - Money Money";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Money Money — Welcome</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #e8f5ff 0%, #e0faf0 60%, #f0f4f8 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            padding: 24px;
+        }
+
+        .landing-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .landing-header img {
+            width: 72px;
+            height: 72px;
+            margin-bottom: 16px;
+        }
+
+        .landing-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1490dc, #00b48c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .landing-header p {
+            color: #6b7a8d;
+            font-size: 1rem;
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 820px;
+            width: 100%;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 18px;
+            padding: 36px 24px;
+            text-align: center;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            text-decoration: none;
+            color: #1a2332;
+            display: block;
+        }
+
+        .role-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+            text-decoration: none;
+            color: #1a2332;
+        }
+
+        .role-card.admin:hover  { border-color: #1490dc; }
+        .role-card.agent:hover  { border-color: #00b48c; }
+        .role-card.user:hover   { border-color: #14c878; }
+
+        .role-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 20px;
+        }
+
+        .admin .role-icon  { background: rgba(20,144,220,0.12); color: #1490dc; }
+        .agent .role-icon  { background: rgba(0,180,140,0.12);  color: #00b48c; }
+        .user  .role-icon  { background: rgba(20,200,120,0.12); color: #14c878; }
+
+        .role-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .role-desc {
+            font-size: 0.85rem;
+            color: #6b7a8d;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .role-btn {
+            display: inline-block;
+            padding: 10px 28px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .admin .role-btn  { background: #1490dc; }
+        .agent .role-btn  { background: #00b48c; }
+        .user  .role-btn  { background: #14c878; }
+
+        .role-btn:hover { opacity: 0.85; }
+
+        .landing-footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #6b7a8d;
+        }
+
+        .landing-footer a { color: #1490dc; font-weight: 500; }
+
+        @@media (max-width: 640px) {
+            .role-grid { grid-template-columns: 1fr; max-width: 340px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="landing-header">
+        <img src="~/images/logo.png" alt="Money Money Logo" />
+        <h1>Money Money</h1>
+        <p>Fast, secure, and affordable money transfers</p>
+    </div>
+
+    <div class="role-grid">
+
+        @* ── ADMIN ── *@
+        <a asp-controller="Auth" asp-action="Login"
+           asp-route-role="Admin"
+           class="role-card admin">
+            <div class="role-icon">&#9881;</div>
+            <div class="role-title">Admin</div>
+            <div class="role-desc">
+                Manage the platform, approve agents, configure commissions and currencies, view reports.
+            </div>
+            <span class="role-btn">Sign in as Admin</span>
+        </a>
+
+        @* ── AGENT ── *@
+        <a asp-controller="Auth" asp-action="Login"
+           asp-route-role="Agent"
+           class="role-card agent">
+            <div class="role-icon">&#127978;</div>
+            <div class="role-title">Agent</div>
+            <div class="role-desc">
+                Process cash-in and cash-out operations, track transactions and commissions.
+            </div>
+            <span class="role-btn">Sign in as Agent</span>
+        </a>
+
+        @* ── USER ── *@
+        <a asp-controller="Auth" asp-action="Login"
+           asp-route-role="User"
+           class="role-card user">
+            <div class="role-icon">&#128100;</div>
+            <div class="role-title">User</div>
+            <div class="role-desc">
+                Send money, top up your account, add beneficiaries and track your transfers.
+            </div>
+            <span class="role-btn">Sign in as User</span>
+        </a>
+
+    </div>
+
+    <div class="landing-footer">
+        New user? <a asp-controller="Auth" asp-action="Register">Create an account</a>
+        &nbsp;|&nbsp;
+        <a asp-controller="Auth" asp-action="Login">Sign in without role selection</a>
+    </div>
+
+</body>
+</html>

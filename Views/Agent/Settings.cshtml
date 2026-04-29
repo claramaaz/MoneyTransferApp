@@ -1,8 +1,7 @@
 ﻿@* ============================================================
    Views/Agent/Settings.cshtml
-   BUG 1 FIX : page accessible depuis nav + dashboard
-   BUG 2 FIX : asp-action="Settings" (pas "UpdateProfile")
-               + hidden input name="id" pour retrouver l'agent
+   Carte Leaflet.js intégrée — brief prof : "Manage working hours
+   and location details on integrated maps"
    ============================================================ *@
 
 @model MoneyTransferApp.Models.Agent
@@ -19,29 +18,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agent Settings - Money Money</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @* Leaflet.js CSS — carte interactive *@
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        #map {
+            height: 340px;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            margin-top: 16px;
+            z-index: 0;
+        }
+        .map-hint {
+            font-size: 0.78rem;
+            color: #6b7a8d;
+            margin-top: 6px;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
 
-    @Html.Partial("_AgentNav")
+@Html.Partial("_AgentNav")
 
-    <div class="mm-container">
+<div class="mm-container">
 
-        <p class="mm-page-title">Agent Settings</p>
-        <p class="mm-page-subtitle">Update your store profile and location details</p>
+    <p class="mm-page-title">Agent Settings</p>
+    <p class="mm-page-subtitle">Update your store profile and location details</p>
 
-        @if (ViewBag.Success != null)
-        {
-            <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
-        }
+    @if (ViewBag.Success != null)
+    {
+        <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
+    }
 
-        @if (Model != null)
-        {
-            <div class="mm-card" style="max-width:600px;">
+    @if (Model != null)
+    {
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
 
-                @* BUG 2 FIX : asp-action="Settings" (correspond au [HttpPost] Settings() du controller) *@
+            @* ── Formulaire ── *@
+            <div class="mm-card">
                 <form asp-action="Settings" asp-controller="Agent" method="post">
-
-                    @* BUG 2 FIX : hidden input pour passer l'Id au controller (FindAsync(id)) *@
                     <input type="hidden" name="id" value="@Model.Id" />
 
                     <div class="mm-form-group">
@@ -68,40 +85,118 @@
                     <div class="mm-form-grid-2">
                         <div class="mm-form-group">
                             <label>Latitude</label>
-                            <input type="number" name="latitude" step="0.0001" value="@Model.Latitude" />
+                            <input type="number" id="latInput" name="latitude"
+                                   step="0.0001" value="@Model.Latitude"
+                                   oninput="updateMarker()" />
                         </div>
                         <div class="mm-form-group">
                             <label>Longitude</label>
-                            <input type="number" name="longitude" step="0.0001" value="@Model.Longitude" />
+                            <input type="number" id="lngInput" name="longitude"
+                                   step="0.0001" value="@Model.Longitude"
+                                   oninput="updateMarker()" />
                         </div>
                     </div>
 
                     <div style="display:flex; gap:10px; margin-top:8px;">
                         <button type="submit" class="mm-btn mm-btn-teal">Save Changes</button>
-                        <a asp-action="Dashboard" class="mm-btn mm-btn-outline">Back to Dashboard</a>
+                        <a asp-action="Dashboard" class="mm-btn mm-btn-outline">Back</a>
                     </div>
-
                 </form>
             </div>
 
-            @* Info carte statut *@
-            <div class="mm-card" style="max-width:600px; margin-top:16px;">
-                <div style="font-size:0.85rem; color:#6b7a8d;">
-                    <strong style="color:#1a2332;">Account Information</strong><br><br>
-                    <span>Agent ID : </span><strong>AGT-@Model.Id.ToString("D4")</strong><br>
-                    <span>Status : </span>
-                    <span class="mm-badge @Model.Status.ToString().ToLower()">@Model.Status</span><br>
-                    <span style="display:inline-block; margin-top:6px;">
-                        Registered : @Model.RegisteredAt.ToString("dd/MM/yyyy")
-                    </span>
+            @* ── Carte Leaflet ── *@
+            <div>
+                <div class="mm-card" style="padding-bottom: 12px;">
+                    <div style="font-weight:600; font-size:0.95rem; margin-bottom:4px;">
+                        📍 Store Location
+                    </div>
+                    <div style="font-size:0.82rem; color:#6b7a8d; margin-bottom:8px;">
+                        @Model.StoreName — @Model.Address
+                    </div>
+
+                    @* Carte interactive *@
+                    <div id="map"></div>
+                    <p class="map-hint">Click on the map to update coordinates, or drag the marker.</p>
+
+                    @* Statut du store *@
+                    <div style="margin-top:14px; padding-top:12px; border-top:1px solid #e2e8f0; font-size:0.85rem; color:#6b7a8d;">
+                        <strong style="color:#1a2332;">Account Info</strong><br><br>
+                        Agent ID : <strong>AGT-@Model.Id.ToString("D4")</strong><br>
+                        Status :
+                        <span class="mm-badge @Model.Status.ToString().ToLower()" style="margin-left:4px;">@Model.Status</span><br>
+                        <span style="display:inline-block; margin-top:6px;">
+                            Registered : @Model.RegisteredAt.ToString("dd/MM/yyyy")
+                        </span>
+                    </div>
                 </div>
             </div>
-        }
-        else
-        {
-            <div class="mm-alert mm-alert-error">Agent profile not found. Please contact admin.</div>
-        }
 
-    </div>
+        </div>
+    }
+    else
+    {
+        <div class="mm-alert mm-alert-error">Agent profile not found. Please contact admin.</div>
+    }
+
+</div>
+
+@* Leaflet.js Script *@
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var lat = @(Model?.Latitude ?? 33.8938);
+    var lng = @(Model?.Longitude ?? 35.5018);
+
+    // Initialiser la carte centrée sur la position de l'agent
+    var map = L.map('map').setView([lat, lng], 14);
+
+    // Tuiles OpenStreetMap (gratuit, pas de clé API)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+    }).addTo(map);
+
+    // Icône personnalisée MoneyMoney (couleur teal)
+    var icon = L.divIcon({
+        html: '<div style="background:#00b48c;width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+        className: ''
+    });
+
+    // Marqueur draggable
+    var marker = L.marker([lat, lng], { draggable: true, icon: icon }).addTo(map);
+
+    // Popup avec infos du store
+    marker.bindPopup(
+        '<strong>@(Model?.StoreName ?? "Agent Store")</strong><br>' +
+        '@(Model?.Address ?? "")<br>' +
+        '<span style="color:#00b48c;">@(Model?.WorkingHours ?? "")</span>'
+    ).openPopup();
+
+    // Mise à jour des champs quand on drag le marqueur
+    marker.on('dragend', function(e) {
+        var pos = e.target.getLatLng();
+        document.getElementById('latInput').value = pos.lat.toFixed(4);
+        document.getElementById('lngInput').value = pos.lng.toFixed(4);
+    });
+
+    // Mise à jour du marqueur quand on tape dans les champs
+    function updateMarker() {
+        var newLat = parseFloat(document.getElementById('latInput').value);
+        var newLng = parseFloat(document.getElementById('lngInput').value);
+        if (!isNaN(newLat) && !isNaN(newLng)) {
+            marker.setLatLng([newLat, newLng]);
+            map.setView([newLat, newLng], 14);
+        }
+    }
+
+    // Click sur la carte → déplacer le marqueur
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        document.getElementById('latInput').value = e.latlng.lat.toFixed(4);
+        document.getElementById('lngInput').value = e.latlng.lng.toFixed(4);
+    });
+</script>
+
 </body>
 </html>
