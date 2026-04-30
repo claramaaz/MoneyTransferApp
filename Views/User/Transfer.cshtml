@@ -1,0 +1,178 @@
+﻿@{
+    Layout = null; ViewData["Title"] = "Send Money";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Send Money - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @Html.Partial("_UserNav")
+    <div class="mm-container">
+
+        <p class="mm-page-title">Send Money</p>
+        <p class="mm-page-subtitle">Transfer to a saved beneficiary or by phone number</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="mm-alert mm-alert-error">@ViewBag.Error</div>
+        }
+        @if (ViewBag.Success != null)
+        {
+            <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
+        }
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+
+            @* ── Option 1: Beneficiary ── *@
+            <div class="mm-card">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                    <div class="ac-icon blue" style="width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;">&#128100;</div>
+                    <div>
+                        <div style="font-weight:700;font-size:1.05rem;">To a Beneficiary</div>
+                        <div style="font-size:0.8rem;color:#6b7a8d;">Account-to-account transfer</div>
+                    </div>
+                </div>
+                <form asp-action="Transfer" asp-controller="User" method="post">
+                    <div class="mm-form-group">
+                        <label>Select Beneficiary</label>
+                        <select name="recipientAccount" onchange="fillAccount(this)">
+                            <option value="">-- Choose saved beneficiary --</option>
+                            @if (ViewBag.Beneficiaries != null)
+                            {
+                                @foreach (var b in (List<MoneyTransferApp.Models.Beneficiary>)ViewBag.Beneficiaries)
+                                {
+                                    <option value="@b.AccountNumber" data-name="@b.FullName">
+                                        @b.FullName — @(b.AccountNumber ?? b.PhoneNumber)
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="mm-form-group">
+                        <label>Or enter account number directly</label>
+                        <input type="text" name="recipientAccount" id="accInput" placeholder="ACC-2026-XXXXX" />
+                    </div>
+                    <div class="mm-form-group">
+                        <label>Amount</label>
+                        <input type="number" name="amount" id="amtB" step="0.01" min="0.01" placeholder="0.00"
+                               oninput="calcPreview('B')" required />
+                    </div>
+                    <div class="mm-form-grid-2">
+                        <div class="mm-form-group">
+                            <label>From Currency</label>
+                            <select name="fromCurrency" id="fromB" onchange="calcPreview('B')">
+                                @if (ViewBag.Currencies != null)
+                                {
+                                    @foreach (var c in (List<MoneyTransferApp.Models.Currency>)ViewBag.Currencies)
+                                    {
+                                        <option value="@c.Code" data-rate="@c.ExchangeRate">@c.FlagEmoji @c.Code</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mm-form-group">
+                            <label>To Currency</label>
+                            <select name="toCurrency">
+                                @if (ViewBag.Currencies != null)
+                                {
+                                    @foreach (var c in (List<MoneyTransferApp.Models.Currency>)ViewBag.Currencies)
+                                    {
+                                        <option value="@c.Code">@c.FlagEmoji @c.Code</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mm-form-group">
+                        <label>Note (optional)</label>
+                        <input type="text" name="note" placeholder="e.g. Rent payment" />
+                    </div>
+                    <div id="previewB" style="display:none; background:rgba(20,144,220,0.06); border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:0.85rem; color:#0e72b0;">
+                        Estimated: <strong id="previewValB"></strong> USD
+                    </div>
+                    <button type="submit" class="mm-btn mm-btn-primary mm-btn-full">Send Transfer</button>
+                </form>
+            </div>
+
+            @* ── Option 2: Phone (OMT style) ── *@
+            <div class="mm-card">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                    <div style="width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:#7c3aed;color:white;">&#128222;</div>
+                    <div>
+                        <div style="font-weight:700;font-size:1.05rem;">By Phone Number</div>
+                        <div style="font-size:0.8rem;color:#6b7a8d;">OMT-style transfer</div>
+                    </div>
+                </div>
+                <form asp-action="Transfer" asp-controller="User" method="post">
+                    <div class="mm-form-group">
+                        <label>Recipient Phone Number</label>
+                        <input type="text" name="recipientPhone" placeholder="+961 XX XXX XXX" required />
+                    </div>
+                    <div class="mm-form-group">
+                        <label>Recipient Full Name</label>
+                        <input type="text" name="recipientName" placeholder="First and last name" required />
+                    </div>
+                    <div class="mm-form-group">
+                        <label>Amount</label>
+                        <input type="number" name="amount" id="amtP" step="0.01" min="0.01" placeholder="0.00"
+                               oninput="calcPreview('P')" required />
+                    </div>
+                    <div class="mm-form-grid-2">
+                        <div class="mm-form-group">
+                            <label>From Currency</label>
+                            <select name="fromCurrency" id="fromP" onchange="calcPreview('P')">
+                                @if (ViewBag.Currencies != null)
+                                {
+                                    @foreach (var c in (List<MoneyTransferApp.Models.Currency>)ViewBag.Currencies)
+                                    {
+                                        <option value="@c.Code" data-rate="@c.ExchangeRate">@c.FlagEmoji @c.Code</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="mm-form-group">
+                            <label>To Currency</label>
+                            <select name="toCurrency">
+                                @if (ViewBag.Currencies != null)
+                                {
+                                    @foreach (var c in (List<MoneyTransferApp.Models.Currency>)ViewBag.Currencies)
+                                    {
+                                        <option value="@c.Code">@c.FlagEmoji @c.Code</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mm-form-group">
+                        <label>Note (optional)</label>
+                        <input type="text" name="note" placeholder="e.g. Family support" />
+                    </div>
+                    <div id="previewP" style="display:none; background:rgba(20,144,220,0.06); border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:0.85rem; color:#0e72b0;">
+                        Estimated: <strong id="previewValP"></strong> USD
+                    </div>
+                    <button type="submit" class="mm-btn mm-btn-primary mm-btn-full">Send via Phone</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+            function calcPreview(form) {
+                var amt  = parseFloat(document.getElementById('amt' + form).value) || 0;
+                var sel  = document.getElementById('from' + form);
+                var rate = parseFloat(sel.options[sel.selectedIndex].getAttribute('data-rate')) || 1;
+                var usd  = (amt / rate).toFixed(2);
+                document.getElementById('preview' + form).style.display = amt > 0 ? 'block' : 'none';
+                document.getElementById('previewVal' + form).textContent = usd;
+            }
+            function fillAccount(sel) {
+                if (sel.value) document.getElementById('accInput').value = sel.value;
+            }
+    </script>
+</body>
+</html>

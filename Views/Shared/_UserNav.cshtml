@@ -1,0 +1,28 @@
+﻿@* ============================================================
+   Views/Shared/_UserNav.cshtml
+   ============================================================ *@
+
+<nav class="mm-navbar">
+    <a class="mm-navbar-brand" asp-controller="User" asp-action="Dashboard">
+        <img src="~/images/logo.png" alt="Money Money Logo" />
+        <div>
+            <span>Money Money</span>
+            <small>User Portal</small>
+        </div>
+    </a>
+    <ul class="mm-nav-links">
+        <li><a asp-controller="User" asp-action="Dashboard">Dashboard</a></li>
+        <li><a asp-controller="User" asp-action="Transfer">Transfer</a></li>
+        <li><a asp-controller="User" asp-action="Transactions">Transactions</a></li>
+        <li><a asp-controller="User" asp-action="Beneficiaries">Beneficiaries</a></li>
+        <li><a asp-controller="User" asp-action="TopUp">Top Up</a></li>
+        <li><a asp-controller="User" asp-action="AgentMap">Find Agents</a></li>
+        <li><a asp-controller="User" asp-action="Reviews">Reviews</a></li>
+        <li><a asp-controller="User" asp-action="Profile">Profile</a></li>
+        <li>
+            <form asp-controller="Auth" asp-action="Logout" method="post" style="display:inline;">
+                <button type="submit" class="mm-btn-logout">Logout</button>
+            </form>
+        </li>
+    </ul>
+</nav>

@@ -1,0 +1,147 @@
+﻿@model MoneyTransferApp.Models.User
+@{
+    Layout = null; ViewData["Title"] = "Dashboard";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @Html.Partial("_UserNav")
+    <div class="mm-container">
+
+        <p class="mm-page-title">Welcome back, @Model.FullName</p>
+        <p class="mm-page-subtitle">@Model.AccountNumber &bull; Preferred currency: @Model.PreferredCurrency</p>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="mm-alert mm-alert-success">@TempData["Success"]</div>
+        }
+
+        @* KPI Cards *@
+        <div class="mm-stats-grid">
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Account Balance (USD)</div>
+                    <div class="sc-value" style="color:var(--mm-teal);">@Model.Balance.ToString("F2")</div>
+                </div>
+                <div class="sc-icon teal">&#36;</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Transfers Sent</div>
+                    <div class="sc-value">@(ViewBag.TotalSent ?? 0)</div>
+                </div>
+                <div class="sc-icon blue">&#8593;</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Transfers Received</div>
+                    <div class="sc-value">@(ViewBag.TotalReceived ?? 0)</div>
+                </div>
+                <div class="sc-icon green">&#8595;</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Notifications</div>
+                    <div class="sc-value" style="color:#c77800;">@(ViewBag.UnreadCount ?? 0)</div>
+                </div>
+                <div class="sc-icon orange">&#128276;</div>
+            </div>
+        </div>
+
+        @* Quick Actions *@
+        <div class="mm-action-grid">
+            <a asp-action="Transfer" class="mm-action-card">
+                <div class="ac-icon blue">&#8645;</div>
+                <div class="ac-text">
+                    <div class="ac-title">Send Money</div>
+                    <div class="ac-desc">Transfer to account or phone</div>
+                </div>
+            </a>
+            <a asp-action="TopUp" class="mm-action-card">
+                <div class="ac-icon green">&#43;</div>
+                <div class="ac-text">
+                    <div class="ac-title">Top Up</div>
+                    <div class="ac-desc">Add funds to your account</div>
+                </div>
+            </a>
+            <a asp-action="Beneficiaries" class="mm-action-card">
+                <div class="ac-icon purple">&#128100;</div>
+                <div class="ac-text">
+                    <div class="ac-title">Beneficiaries</div>
+                    <div class="ac-desc">Manage saved recipients</div>
+                </div>
+            </a>
+            <a asp-action="AgentMap" class="mm-action-card">
+                <div class="ac-icon" style="background:var(--mm-teal);color:white;">&#128205;</div>
+                <div class="ac-text">
+                    <div class="ac-title">Find Agents</div>
+                    <div class="ac-desc">Locate nearby stores</div>
+                </div>
+            </a>
+        </div>
+
+        @* Notifications *@
+        @if (ViewBag.Notifications != null && ((List<MoneyTransferApp.Models.Notification>)ViewBag.Notifications).Any())
+        {
+            <div class="mm-card" style="margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-weight:600;">Recent Notifications</span>
+                    <form asp-action="MarkNotificationsRead" method="post" style="display:inline;">
+                        <button type="submit" class="mm-btn mm-btn-outline mm-btn-sm">Mark all read</button>
+                    </form>
+                </div>
+                @foreach (var n in (List<MoneyTransferApp.Models.Notification>)ViewBag.Notifications)
+                {
+                    <div style="padding:8px 0; border-bottom:0.5px solid #e2e8f0; font-size:0.88rem; display:flex; gap:10px; align-items:flex-start;">
+                        <span style="color:@(n.IsRead ? "#6b7a8d" : "var(--mm-blue)"); font-size:0.7rem; margin-top:3px;">@(n.IsRead ? "●" : "◉")</span>
+                        <div>
+                            <div style="color:@(n.IsRead ? "#6b7a8d" : "#1a2332");">@n.Message</div>
+                            <div style="font-size:0.75rem; color:#6b7a8d; margin-top:2px;">@n.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        @* Recent Transactions *@
+        <div class="mm-table-wrap">
+            <div class="mm-table-header">
+                <span class="th-title">Recent Transactions</span>
+                <a asp-action="Transactions" class="th-link">View All</a>
+            </div>
+            @if (ViewBag.RecentTx == null || !((List<MoneyTransferApp.Models.Transaction>)ViewBag.RecentTx).Any())
+            {
+                <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No transactions yet. <a asp-action="Transfer">Send your first transfer →</a></div>
+            }
+            else
+            {
+                <table class="mm-table">
+                    <thead>
+                        <tr><th>Serial</th><th>Amount</th><th>USD Equiv.</th><th>Type</th><th>Status</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var t in (List<MoneyTransferApp.Models.Transaction>)ViewBag.RecentTx)
+                        {
+                            <tr>
+                                <td style="font-family:monospace;font-size:0.83rem;">@t.SerialNumber</td>
+                                <td style="font-weight:600;">@t.Amount.ToString("F2") @t.FromCurrency</td>
+                                <td style="color:var(--mm-teal);">@t.ConvertedAmount.ToString("F2")</td>
+                                <td><span class="mm-badge active">@t.Type</span></td>
+                                <td><span class="mm-badge @t.Status.ToString().ToLower()">@t.Status</span></td>
+                                <td style="font-size:0.83rem;color:#6b7a8d;">@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+
+    </div>
+</body>
+</html>

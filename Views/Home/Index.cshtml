@@ -1,8 +1,7 @@
 ﻿@* ============================================================
-   Views/Home/Index.cshtml — Page d'accueil avec choix de rôle
-   Fidèle au cours Identity (PDF 10) :
-   - 3 rôles : Admin, Agent, User
-   - Redirige vers Login avec le rôle présélectionné
+   Views/Home/Index.cshtml — Landing page
+   2 rôles seulement : Admin + User
+   L'Agent n'apparaît pas ici — c'est un User qui a été approuvé
    ============================================================ *@
 
 @{
@@ -28,45 +27,26 @@
             font-family: 'Segoe UI', system-ui, sans-serif;
             padding: 24px;
         }
-
-        .landing-header {
-            text-align: center;
-            margin-bottom: 48px;
-        }
-
-        .landing-header img {
-            width: 72px;
-            height: 72px;
-            margin-bottom: 16px;
-        }
-
+        .landing-header { text-align: center; margin-bottom: 48px; }
+        .landing-header img { width: 72px; height: 72px; margin-bottom: 16px; }
         .landing-header h1 {
-            font-size: 2rem;
-            font-weight: 800;
+            font-size: 2.2rem; font-weight: 800;
             background: linear-gradient(135deg, #1490dc, #00b48c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 8px;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 8px;
         }
-
-        .landing-header p {
-            color: #6b7a8d;
-            font-size: 1rem;
-        }
-
+        .landing-header p { color: #6b7a8d; font-size: 1rem; }
         .role-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            max-width: 820px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+            max-width: 580px;
             width: 100%;
         }
-
         .role-card {
             background: white;
             border-radius: 18px;
-            padding: 36px 24px;
+            padding: 40px 28px;
             text-align: center;
             border: 2px solid transparent;
             box-shadow: 0 4px 20px rgba(0,0,0,0.06);
@@ -76,75 +56,47 @@
             color: #1a2332;
             display: block;
         }
-
         .role-card:hover {
             transform: translateY(-6px);
             box-shadow: 0 12px 40px rgba(0,0,0,0.12);
-            text-decoration: none;
-            color: #1a2332;
+            text-decoration: none; color: #1a2332;
         }
-
-        .role-card.admin:hover  { border-color: #1490dc; }
-        .role-card.agent:hover  { border-color: #00b48c; }
-        .role-card.user:hover   { border-color: #14c878; }
-
+        .role-card.admin:hover { border-color: #1490dc; }
+        .role-card.user:hover  { border-color: #00b48c; }
         .role-icon {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            margin: 0 auto 20px;
+            width: 76px; height: 76px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.2rem; margin: 0 auto 20px;
         }
-
-        .admin .role-icon  { background: rgba(20,144,220,0.12); color: #1490dc; }
-        .agent .role-icon  { background: rgba(0,180,140,0.12);  color: #00b48c; }
-        .user  .role-icon  { background: rgba(20,200,120,0.12); color: #14c878; }
-
-        .role-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .role-desc {
-            font-size: 0.85rem;
-            color: #6b7a8d;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-
+        .admin .role-icon { background: rgba(20,144,220,0.12); color: #1490dc; }
+        .user  .role-icon { background: rgba(0,180,140,0.12);  color: #00b48c; }
+        .role-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 10px; }
+        .role-desc  { font-size: 0.85rem; color: #6b7a8d; line-height: 1.6; margin-bottom: 24px; }
         .role-btn {
-            display: inline-block;
-            padding: 10px 28px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.15s;
+            display: inline-block; padding: 11px 32px;
+            border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+            color: white; border: none; cursor: pointer; transition: opacity 0.15s;
         }
-
-        .admin .role-btn  { background: #1490dc; }
-        .agent .role-btn  { background: #00b48c; }
-        .user  .role-btn  { background: #14c878; }
-
+        .admin .role-btn { background: #1490dc; }
+        .user  .role-btn { background: #00b48c; }
         .role-btn:hover { opacity: 0.85; }
-
-        .landing-footer {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 0.85rem;
+        .agent-note {
+            margin-top: 32px;
+            background: rgba(20,144,220,0.06);
+            border: 1.5px solid rgba(20,144,220,0.15);
+            border-radius: 12px;
+            padding: 14px 22px;
+            font-size: 0.82rem;
             color: #6b7a8d;
+            max-width: 580px;
+            text-align: center;
+            line-height: 1.6;
         }
-
+        .agent-note strong { color: #1490dc; }
+        .landing-footer { margin-top: 24px; text-align: center; font-size: 0.85rem; color: #6b7a8d; }
         .landing-footer a { color: #1490dc; font-weight: 500; }
-
-        @@media (max-width: 640px) {
-            .role-grid { grid-template-columns: 1fr; max-width: 340px; }
+        @@media (max-width: 500px) {
+            .role-grid { grid-template-columns: 1fr; max-width: 300px; }
         }
     </style>
 </head>
@@ -165,41 +117,36 @@
             <div class="role-icon">&#9881;</div>
             <div class="role-title">Admin</div>
             <div class="role-desc">
-                Manage the platform, approve agents, configure commissions and currencies, view reports.
+                Manage the platform, approve agents, configure commissions, currencies, and view reports.
             </div>
             <span class="role-btn">Sign in as Admin</span>
         </a>
 
-        @* ── AGENT ── *@
-        <a asp-controller="Auth" asp-action="Login"
-           asp-route-role="Agent"
-           class="role-card agent">
-            <div class="role-icon">&#127978;</div>
-            <div class="role-title">Agent</div>
-            <div class="role-desc">
-                Process cash-in and cash-out operations, track transactions and commissions.
-            </div>
-            <span class="role-btn">Sign in as Agent</span>
-        </a>
-
-        @* ── USER ── *@
+        @* ── USER / CUSTOMER ── *@
         <a asp-controller="Auth" asp-action="Login"
            asp-route-role="User"
            class="role-card user">
             <div class="role-icon">&#128100;</div>
-            <div class="role-title">User</div>
+            <div class="role-title">Customer</div>
             <div class="role-desc">
-                Send money, top up your account, add beneficiaries and track your transfers.
+                Send money, top up your account, manage beneficiaries and track your transfers.
             </div>
-            <span class="role-btn">Sign in as User</span>
+            <span class="role-btn">Sign in as Customer</span>
         </a>
 
     </div>
 
-    <div class="landing-footer">
-        New user? <a asp-controller="Auth" asp-action="Register">Create an account</a>
+    @* Note sur les Agents *@
+    <div class="agent-note">
+        &#127978; <strong>Are you an Agent?</strong>
+        Agents sign in through the regular login page.
+        To become an agent, sign in as a Customer and apply from your dashboard.
+    </div>
+
+    <div class="landing-footer" style="margin-top:16px;">
+        New here? <a asp-controller="Auth" asp-action="Register">Create an account</a>
         &nbsp;|&nbsp;
-        <a asp-controller="Auth" asp-action="Login">Sign in without role selection</a>
+        <a asp-controller="Auth" asp-action="Login">Agent sign in →</a>
     </div>
 
 </body>

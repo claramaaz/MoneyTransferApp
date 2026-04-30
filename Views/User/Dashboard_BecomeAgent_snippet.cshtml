@@ -1,0 +1,22 @@
+﻿@* ============================================================
+   MODIFICATION dans Views/User/Dashboard.cshtml
+   Ajoute une carte "Become an Agent" dans les Quick Actions
+   
+   Dans la section mm-action-grid, après la carte "Find Agents",
+   AJOUTE cette carte :
+   ============================================================ *@
+
+@* ── Carte "Become an Agent" à ajouter dans mm-action-grid ── *@
+<a asp-action="BecomeAgent" class="mm-action-card">
+    <div class="ac-icon" style="background:#7c3aed;color:white;">&#127978;</div>
+    <div class="ac-text">
+        <div class="ac-title">Become an Agent</div>
+        <div class="ac-desc">Apply to join our network</div>
+    </div>
+</a>
+
+@* ============================================================
+   Aussi, dans la navbar _UserNav.cshtml,
+   tu peux ajouter ce lien optionnel entre Reviews et Profile :
+   ============================================================ *@
+<li><a asp-controller="User" asp-action="BecomeAgent">Become Agent</a></li>

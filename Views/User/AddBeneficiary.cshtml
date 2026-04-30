@@ -1,0 +1,75 @@
+﻿@model MoneyTransferApp.Models.Beneficiary
+@{
+    Layout = null; ViewData["Title"] = "Add Beneficiary";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Beneficiary - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @Html.Partial("_UserNav")
+    <div class="mm-container">
+
+        <p class="mm-page-title">Add Beneficiary</p>
+        <p class="mm-page-subtitle">Save a new recipient for future transfers</p>
+
+        <div class="mm-card" style="max-width:560px;">
+            <form asp-action="AddBeneficiary" asp-controller="User" method="post">
+
+                <div class="mm-form-group">
+                    <label>Full Name *</label>
+                    <input type="text" name="FullName" placeholder="First and last name" required />
+                </div>
+
+                <div class="mm-form-group">
+                    <label>Nickname (optional)</label>
+                    <input type="text" name="Nickname" placeholder="e.g. Mom, Brother" />
+                </div>
+
+                <div class="mm-form-group">
+                    <label>Account Number (for account-to-account transfer)</label>
+                    <input type="text" name="AccountNumber" placeholder="ACC-2026-XXXXX" />
+                </div>
+
+                <div class="mm-form-group">
+                    <label>Phone Number (for OMT-style transfer)</label>
+                    <input type="text" name="PhoneNumber" placeholder="+961 XX XXX XXX" />
+                </div>
+
+                <div class="mm-alert mm-alert-info" style="font-size:0.82rem;">
+                    Fill at least one: account number OR phone number.
+                </div>
+
+                <div class="mm-form-grid-2">
+                    <div class="mm-form-group">
+                        <label>Currency *</label>
+                        <select name="Currency" required>
+                            <option value="USD">🇺🇸 USD</option>
+                            <option value="EUR">🇪🇺 EUR</option>
+                            <option value="LBP">🇱🇧 LBP</option>
+                            <option value="AED">🇦🇪 AED</option>
+                            <option value="SAR">🇸🇦 SAR</option>
+                            <option value="GBP">🇬🇧 GBP</option>
+                        </select>
+                    </div>
+                    <div class="mm-form-group">
+                        <label>Country</label>
+                        <input type="text" name="Country" placeholder="Lebanon" />
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:8px;">
+                    <button type="submit" class="mm-btn mm-btn-primary">Save Beneficiary</button>
+                    <a asp-action="Beneficiaries" class="mm-btn mm-btn-outline">Cancel</a>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</body>
+</html>

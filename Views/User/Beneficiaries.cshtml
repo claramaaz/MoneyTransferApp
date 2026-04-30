@@ -1,0 +1,77 @@
+﻿@model IEnumerable<MoneyTransferApp.Models.Beneficiary>
+@{
+    Layout = null; ViewData["Title"] = "Beneficiaries";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beneficiaries - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @Html.Partial("_UserNav")
+    <div class="mm-container">
+
+        <p class="mm-page-title">Beneficiaries</p>
+        <p class="mm-page-subtitle">Manage your saved recipients</p>
+
+        @if (ViewBag.Success != null)
+        {
+            <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
+        }
+
+        <div style="margin-bottom:16px;">
+            <a asp-action="AddBeneficiary" class="mm-btn mm-btn-primary">+ Add Beneficiary</a>
+        </div>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="mm-card" style="text-align:center; color:#6b7a8d; padding:40px;">
+                No saved beneficiaries yet.<br>
+                <a asp-action="AddBeneficiary" style="color:var(--mm-blue); margin-top:8px; display:inline-block;">Add your first beneficiary →</a>
+            </div>
+        }
+        else
+        {
+            <div class="mm-table-wrap">
+                <div class="mm-table-header"><span class="th-title">Saved Recipients</span></div>
+                <table class="mm-table">
+                    <thead>
+                        <tr><th>Name</th><th>Account / Phone</th><th>Currency</th><th>Country</th><th>Added</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model)
+                        {
+                            <tr>
+                                <td style="font-weight:600;">
+                                    @b.FullName
+                                    @if (!string.IsNullOrEmpty(b.Nickname))
+                                    {
+                                        <span style="font-size:0.78rem;color:#6b7a8d;font-weight:400;"> (@b.Nickname)</span>
+                                    }
+                                </td>
+                                <td style="font-family:monospace;font-size:0.85rem;">
+                                    @(b.AccountNumber ?? b.PhoneNumber ?? "—")
+                                </td>
+                                <td><span class="mm-badge active">@b.Currency</span></td>
+                                <td style="color:#6b7a8d;font-size:0.85rem;">@(b.Country ?? "—")</td>
+                                <td style="font-size:0.83rem;color:#6b7a8d;">@b.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <form asp-action="DeleteBeneficiary" method="post" style="display:inline;"
+                                          onsubmit="return confirm('Remove @b.FullName?');">
+                                        <input type="hidden" name="id" value="@b.Id" />
+                                        <button type="submit" class="mm-btn mm-btn-danger mm-btn-sm">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </div>
+</body>
+</html>
