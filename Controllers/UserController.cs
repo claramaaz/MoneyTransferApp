@@ -55,14 +55,11 @@ namespace MoneyTransferApp.Controllers
                 .Take(5)
                 .ToListAsync();
 
-            ViewBag.UnreadCount = await _db.Notifications
-                .CountAsync(n => n.UserId == userId && !n.IsRead);
+            ViewBag.UnreadCount = await _db.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead);
             ViewBag.RecentTx = recentTx;
             ViewBag.Notifications = notifications;
-            ViewBag.TotalSent = await _db.Transactions
-                .CountAsync(t => t.SenderId == userId);
-            ViewBag.TotalReceived = await _db.Transactions
-                .CountAsync(t => t.RecipientId == userId);
+            ViewBag.TotalSent = await _db.Transactions.CountAsync(t => t.SenderId == userId);
+            ViewBag.TotalReceived = await _db.Transactions.CountAsync(t => t.RecipientId == userId);
 
             return View(user);
         }
@@ -75,12 +72,9 @@ namespace MoneyTransferApp.Controllers
         {
             var userId = _userManager.GetUserId(User);
             ViewBag.Beneficiaries = await _db.Beneficiaries
-                .Where(b => b.UserId == userId)
-                .ToListAsync();
+                .Where(b => b.UserId == userId).ToListAsync();
             ViewBag.Currencies = await _db.Currencies
-                .Where(c => c.IsActive)
-                .OrderBy(c => c.Code)
-                .ToListAsync();
+                .Where(c => c.IsActive).OrderBy(c => c.Code).ToListAsync();
             if (TempData["Error"] != null) ViewBag.Error = TempData["Error"];
             if (TempData["Success"] != null) ViewBag.Success = TempData["Success"];
             return View();
@@ -88,19 +82,14 @@ namespace MoneyTransferApp.Controllers
 
         [HttpPost]
         public async Task<IActionResult> Transfer(
-            string? recipientAccount,
-            string? recipientPhone,
-            string? recipientName,
-            decimal amount,
-            string fromCurrency,
-            string toCurrency,
-            string? note)
+            string? recipientAccount, string? recipientPhone,
+            string? recipientName, decimal amount,
+            string fromCurrency, string toCurrency, string? note)
         {
             var userId = _userManager.GetUserId(User);
             var sender = await _db.Users.FindAsync(userId);
             if (sender == null) return RedirectToAction("Dashboard");
 
-            // Validation
             if (amount <= 0)
             {
                 TempData["Error"] = "Amount must be greater than 0.";
@@ -125,7 +114,7 @@ namespace MoneyTransferApp.Controllers
                 }
             }
 
-            // Vérifier solde suffisant
+            // Vérifier solde
             if (sender.Balance < convertedAmount)
             {
                 TempData["Error"] = $"Insufficient balance. Available: {sender.Balance:F2} USD, Required: {convertedAmount:F2} USD";
@@ -135,13 +124,13 @@ namespace MoneyTransferApp.Controllers
             // Trouver le destinataire
             User? recipient = null;
             if (!string.IsNullOrEmpty(recipientAccount))
-                recipient = await _db.Users
-                    .FirstOrDefaultAsync(u => u.AccountNumber == recipientAccount);
-
-            if (!string.IsNullOrEmpty(recipientAccount) && recipient == null)
             {
-                TempData["Error"] = "Account not found: " + recipientAccount;
-                return RedirectToAction("Transfer");
+                recipient = await _db.Users.FirstOrDefaultAsync(u => u.AccountNumber == recipientAccount);
+                if (recipient == null)
+                {
+                    TempData["Error"] = "Account not found: " + recipientAccount;
+                    return RedirectToAction("Transfer");
+                }
             }
 
             // Commission
@@ -152,7 +141,7 @@ namespace MoneyTransferApp.Controllers
             if (tier != null)
                 commissionAmount = Math.Round(amount * tier.Rate / 100m, 2);
 
-            // Créer la transaction (SerialNumber auto-généré par le Repository)
+            // Créer la transaction (SerialNumber auto-généré par TransactionRepository)
             var tx = new Transaction
             {
                 SenderId = userId,
@@ -170,13 +159,11 @@ namespace MoneyTransferApp.Controllers
                 Type = TransactionType.Transfer,
                 CompletedAt = DateTime.Now
             };
-
             await _txRepo.AddAsync(tx);
 
             // Mise à jour des balances
             sender.Balance -= convertedAmount;
             await _userManager.UpdateAsync(sender);
-
             if (recipient != null)
             {
                 recipient.Balance += convertedAmount;
@@ -192,7 +179,6 @@ namespace MoneyTransferApp.Controllers
                 IsRead = false,
                 CreatedAt = DateTime.Now
             });
-
             if (recipient != null)
             {
                 _db.Notifications.Add(new Notification
@@ -347,6 +333,7 @@ namespace MoneyTransferApp.Controllers
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
             if (TempData["Success"] != null) ViewBag.Success = TempData["Success"];
+            if (TempData["Error"] != null) ViewBag.Error = TempData["Error"];
             return View(list);
         }
 
@@ -354,17 +341,13 @@ namespace MoneyTransferApp.Controllers
         public async Task<IActionResult> AddReview(int rating, string? comment)
         {
             var userId = _userManager.GetUserId(User);
-
-            // Vérifier qu'on a pas déjà posté un avis aujourd'hui
             var alreadyReviewed = await _db.Reviews
-                .AnyAsync(r => r.UserId == userId &&
-                               r.CreatedAt.Date == DateTime.Today);
+                .AnyAsync(r => r.UserId == userId && r.CreatedAt.Date == DateTime.Today);
             if (alreadyReviewed)
             {
                 TempData["Error"] = "You already submitted a review today.";
                 return RedirectToAction("Reviews");
             }
-
             _db.Reviews.Add(new Review
             {
                 UserId = userId,
@@ -403,50 +386,22 @@ namespace MoneyTransferApp.Controllers
         }
 
         // ─────────────────────────────────────────────────────────
-        // MARK NOTIFICATIONS AS READ
-        // ─────────────────────────────────────────────────────────
-        [HttpPost]
-        public async Task<IActionResult> MarkNotificationsRead()
-        {
-            var userId = _userManager.GetUserId(User);
-            var unread = await _db.Notifications
-                .Where(n => n.UserId == userId && !n.IsRead)
-                .ToListAsync();
-            unread.ForEach(n => n.IsRead = true);
-            await _db.SaveChangesAsync();
-            return RedirectToAction("Dashboard");
-        }
-
-        // ============================================================
-        // AJOUTS à faire dans Controllers/UserController.cs (Personne B)
-        // Colle ces 2 actions à la fin du UserController, avant le }
-        // ============================================================
-
-        // ─────────────────────────────────────────────────────────
-        // BECOME AN AGENT — voir la page de demande
+        // BECOME AN AGENT — Brief prof: un User peut faire une demande
         // ─────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> BecomeAgent()
         {
             var userId = _userManager.GetUserId(User);
-
-            // Vérifier si déjà une demande en cours
-            var existingAgent = await _db.Agents
-                .FirstOrDefaultAsync(a => a.UserId == userId);
-
-            if (existingAgent != null)
+            var existing = await _db.Agents.FirstOrDefaultAsync(a => a.UserId == userId);
+            if (existing != null)
             {
                 ViewBag.AlreadyApplied = true;
-                ViewBag.AgentStatus = existingAgent.Status;
+                ViewBag.AgentStatus = existing.Status;
             }
-
+            if (TempData["Success"] != null) ViewBag.Success = TempData["Success"];
             return View();
         }
 
-        // ─────────────────────────────────────────────────────────
-        // APPLY AS AGENT — soumettre la demande
-        // L'admin approuve depuis Admin/Agents
-        // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> ApplyAsAgent(
             string storeName, string ownerName, string phone,
@@ -454,8 +409,6 @@ namespace MoneyTransferApp.Controllers
             double latitude = 33.8938, double longitude = 35.5018)
         {
             var userId = _userManager.GetUserId(User);
-
-            // Vérifier si demande déjà existante
             var existing = await _db.Agents.FirstOrDefaultAsync(a => a.UserId == userId);
             if (existing != null)
             {
@@ -463,8 +416,7 @@ namespace MoneyTransferApp.Controllers
                 return RedirectToAction("BecomeAgent");
             }
 
-            // Créer l'entrée Agent avec statut Pending
-            _db.Agents.Add(new MoneyTransferApp.Models.Agent
+            _db.Agents.Add(new Agent
             {
                 UserId = userId,
                 StoreName = storeName,
@@ -474,13 +426,11 @@ namespace MoneyTransferApp.Controllers
                 WorkingHours = workingHours,
                 Latitude = latitude,
                 Longitude = longitude,
-                Status = MoneyTransferApp.Models.AgentStatus.Pending,
+                Status = AgentStatus.Pending,
                 RegisteredAt = DateTime.Now
             });
-            await _db.SaveChangesAsync();
 
-            // Notification pour l'utilisateur
-            _db.Notifications.Add(new MoneyTransferApp.Models.Notification
+            _db.Notifications.Add(new Notification
             {
                 UserId = userId,
                 Message = $"Your agent application for '{storeName}' has been submitted. Pending admin approval.",
@@ -490,8 +440,22 @@ namespace MoneyTransferApp.Controllers
             });
             await _db.SaveChangesAsync();
 
-            TempData["Success"] = "Application submitted! You will be notified once approved.";
+            TempData["Success"] = "Application submitted! You will be notified once approved by admin.";
             return RedirectToAction("BecomeAgent");
+        }
+
+        // ─────────────────────────────────────────────────────────
+        // MARK NOTIFICATIONS AS READ
+        // ─────────────────────────────────────────────────────────
+        [HttpPost]
+        public async Task<IActionResult> MarkNotificationsRead()
+        {
+            var userId = _userManager.GetUserId(User);
+            var unread = await _db.Notifications
+                .Where(n => n.UserId == userId && !n.IsRead).ToListAsync();
+            unread.ForEach(n => n.IsRead = true);
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Dashboard");
         }
     }
 }

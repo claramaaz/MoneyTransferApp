@@ -22,8 +22,6 @@ namespace MoneyTransferApp.Controllers
 
         // ─────────────────────────────────────────────────────────
         // DASHBOARD
-        // BUG FIX : TotalVolume utilise ConvertedAmount (USD équivalent)
-        //           au lieu de Amount brut (qui inclut LBP/EUR sans conversion)
         // ─────────────────────────────────────────────────────────
         public async Task<IActionResult> Dashboard()
         {
@@ -32,7 +30,6 @@ namespace MoneyTransferApp.Controllers
             ViewBag.TotalAgents = await _db.Agents.CountAsync();
             ViewBag.PendingAgents = await _db.Agents.CountAsync(a => a.Status == AgentStatus.Pending);
 
-            // BUG FIX : utiliser ConvertedAmount (toujours en USD) pour le volume réel
             ViewBag.TotalVolume = Math.Round(
                 await _db.Transactions.SumAsync(t => (decimal?)t.ConvertedAmount) ?? 0, 2);
 
@@ -55,32 +52,88 @@ namespace MoneyTransferApp.Controllers
                 .Include(a => a.User)
                 .OrderByDescending(a => a.RegisteredAt)
                 .ToListAsync();
+
             if (TempData["Success"] != null) ViewBag.Success = TempData["Success"];
+            if (TempData["Error"] != null) ViewBag.Error = TempData["Error"];
+
             return View(agents);
         }
 
+        // ─────────────────────────────────────────────────────────
+        // APPROVE AGENT
+        // BUG FIX : assign role "Agent" to the user + send notification
+        // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> ApproveAgent(int id)
         {
-            var agent = await _db.Agents.FindAsync(id);
+            var agent = await _db.Agents
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
             if (agent == null) return NotFound();
+
+            // 1. Update agent status
             agent.Status = AgentStatus.Approved;
             agent.ApprovedAt = DateTime.Now;
             _db.Agents.Update(agent);
+
+            // 2. Assign "Agent" role to the user (Identity role)
+            var user = await _userManager.FindByIdAsync(agent.UserId);
+            if (user != null)
+            {
+                // Also remove "User" role if business logic requires a single role
+                // Uncomment the line below if a user cannot be both User and Agent simultaneously:
+                await _userManager.RemoveFromRoleAsync(user, Roles.User);
+
+                if (!await _userManager.IsInRoleAsync(user, Roles.Agent))
+                    await _userManager.AddToRoleAsync(user, Roles.Agent);
+
+                // 3. Send in-app notification to the user
+                _db.Notifications.Add(new Notification
+                {
+                    UserId = user.Id,
+                    Message = $"Congratulations! Your agent application for '{agent.StoreName}' has been approved. You can now log in as an Agent.",
+                    Type = "agent",
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
+                });
+            }
+
             await _db.SaveChangesAsync();
-            TempData["Success"] = agent.StoreName + " has been approved!";
+
+            TempData["Success"] = $"{agent.StoreName} has been approved!";
             return RedirectToAction("Agents");
         }
 
+        // ─────────────────────────────────────────────────────────
+        // REJECT AGENT
+        // Also notifies the user
+        // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> RejectAgent(int id)
         {
-            var agent = await _db.Agents.FindAsync(id);
+            var agent = await _db.Agents
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.Id == id);
+
             if (agent == null) return NotFound();
+
             agent.Status = AgentStatus.Rejected;
             _db.Agents.Update(agent);
+
+            // Notify the user of rejection
+            _db.Notifications.Add(new Notification
+            {
+                UserId = agent.UserId,
+                Message = $"Your agent application for '{agent.StoreName}' has been reviewed and was not approved at this time.",
+                Type = "agent",
+                IsRead = false,
+                CreatedAt = DateTime.Now
+            });
+
             await _db.SaveChangesAsync();
-            TempData["Success"] = "Agent rejected.";
+
+            TempData["Success"] = "Agent application rejected.";
             return RedirectToAction("Agents");
         }
 
@@ -148,14 +201,12 @@ namespace MoneyTransferApp.Controllers
 
         // ─────────────────────────────────────────────────────────
         // REPORTS
-        // BUG FIX : TotalVolume utilise ConvertedAmount
         // ─────────────────────────────────────────────────────────
         public async Task<IActionResult> Reports()
         {
             ViewBag.TotalUsers = await _db.Users.CountAsync();
             ViewBag.TotalTransactions = await _db.Transactions.CountAsync();
 
-            // BUG FIX : ConvertedAmount pour le vrai volume en USD
             ViewBag.TotalVolume = Math.Round(
                 await _db.Transactions.SumAsync(t => (decimal?)t.ConvertedAmount) ?? 0, 2);
 
@@ -187,15 +238,12 @@ namespace MoneyTransferApp.Controllers
         }
 
         // ─────────────────────────────────────────────────────────
-        // CHATBOT PROXY — BUG FIX chatbot
-        // L'appel API Anthropic se fait ICI côté serveur (pas depuis le browser)
-        // car l'API key ne peut pas être exposée côté client
+        // CHATBOT PROXY
         // ─────────────────────────────────────────────────────────
         [HttpPost]
         [AllowAnonymous]
         public async Task<IActionResult> ChatProxy([FromBody] ChatRequest request)
         {
-            // Récupère la clé depuis appsettings.json → "Anthropic:ApiKey"
             var apiKey = HttpContext.RequestServices
                 .GetRequiredService<IConfiguration>()["Anthropic:ApiKey"] ?? "";
 
@@ -242,9 +290,6 @@ Always respond in the same language the user writes in (French or English).";
         }
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Modèle pour le ChatProxy
-    // ─────────────────────────────────────────────────────────
     public class ChatRequest
     {
         public List<ChatMessage> Messages { get; set; } = new();

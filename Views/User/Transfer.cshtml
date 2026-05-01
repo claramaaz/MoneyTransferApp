@@ -39,7 +39,7 @@
                 <form asp-action="Transfer" asp-controller="User" method="post">
                     <div class="mm-form-group">
                         <label>Select Beneficiary</label>
-                        <select name="recipientAccount" onchange="fillAccount(this)">
+                        <select onchange="fillAccount(this)">
                             <option value="">-- Choose saved beneficiary --</option>
                             @if (ViewBag.Beneficiaries != null)
                             {

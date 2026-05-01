@@ -55,33 +55,39 @@ namespace MoneyTransferApp.Controllers
         // si l'utilisateur s'est connecté depuis la mauvaise page
         // ─────────────────────────────────────────────────────────
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string password,
-                                               bool rememberMe, string? role)
+        public async Task<IActionResult> Login(string email, string password, bool rememberMe = false)
         {
-            // PDF 10 : SignInManager.PasswordSignInAsync
-            var result = await _signInManager.PasswordSignInAsync(
-                email, password, rememberMe, lockoutOnFailure: false);
-
-            if (result.Succeeded)
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
             {
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user != null)
-                {
-                    // PDF 10 : IsInRoleAsync — redirection selon le rôle réel
-                    if (await _userManager.IsInRoleAsync(user, Roles.Admin))
-                        return RedirectToAction("Dashboard", "Admin");
-
-                    if (await _userManager.IsInRoleAsync(user, Roles.Agent))
-                        return RedirectToAction("Dashboard", "Agent");
-
-                    return RedirectToAction("Dashboard", "User");
-                }
+                ViewBag.Error = "Email and password are required.";
+                return View();
             }
 
-            // Mauvais mot de passe ou email inexistant
-            ViewBag.Error = "Invalid email or password. Please try again.";
-            ViewBag.Role = role ?? "";
-            return View();
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                ViewBag.Error = "Invalid email or password.";
+                return View();
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(
+                user, password, rememberMe, lockoutOnFailure: false);
+
+            if (!result.Succeeded)
+            {
+                ViewBag.Error = "Invalid email or password.";
+                return View();
+            }
+
+            // ── Redirect based on role ──────────────────────────────
+            // Order matters: check Admin first, then Agent, then default User
+            if (await _userManager.IsInRoleAsync(user, Roles.Admin))
+                return RedirectToAction("Dashboard", "Admin");
+
+            if (await _userManager.IsInRoleAsync(user, Roles.Agent))
+                return RedirectToAction("Dashboard", "Agent");
+
+            return RedirectToAction("Dashboard", "User");
         }
 
         // ─────────────────────────────────────────────────────────

@@ -70,8 +70,8 @@
                                 <td style="font-family:monospace; font-size:0.85rem;">@t.SerialNumber</td>
                                 <td style="font-weight:600;">@t.Amount.ToString("F2") @t.FromCurrency</td>
                                 <td style="color:var(--mm-teal);">@t.ConvertedAmount.ToString("F2")</td>
-                                <td>@t.FromCurrency</td>
-                                <td>@t.ToCurrency</td>
+                                <td style="font-size:0.83rem;">@(t.Sender?.FullName ?? "—")</td>
+                                <td style="font-size:0.83rem;">@(t.Recipient?.FullName ?? t.RecipientName ?? t.RecipientPhone ?? "—")</td>
                                 <td><span class="mm-badge active">@t.Type</span></td>
                                 <td><span class="mm-badge @t.Status.ToString().ToLower()">@t.Status</span></td>
                                 <td style="color:#6b7a8d; font-size:0.85rem;">@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>

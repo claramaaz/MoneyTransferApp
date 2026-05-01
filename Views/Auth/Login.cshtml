@@ -115,14 +115,6 @@
 
         </form>
 
-        @* Hint compte de test pour la démo *@
-        @if (!string.IsNullOrEmpty(role))
-        {
-            <div class="mm-alert mm-alert-info" style="margin-top:14px; font-size:0.78rem;">
-                <strong>Test account:</strong> @hintEmail / @hintPassword
-            </div>
-        }
-
         <div class="mm-auth-footer" style="margin-top:16px;">
             @if (!string.IsNullOrEmpty(role))
             {

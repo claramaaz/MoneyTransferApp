@@ -84,13 +84,20 @@
                     <div class="ac-desc">Locate nearby stores</div>
                 </div>
             </a>
+            <a asp-action="BecomeAgent" class="mm-action-card">
+                <div class="ac-icon" style="background:#7c3aed;color:white;">&#127978;</div>
+                <div class="ac-text">
+                    <div class="ac-title">Become an Agent</div>
+                    <div class="ac-desc">Apply to join our network</div>
+                </div>
+            </a>
         </div>
 
         @* Notifications *@
         @if (ViewBag.Notifications != null && ((List<MoneyTransferApp.Models.Notification>)ViewBag.Notifications).Any())
         {
             <div class="mm-card" style="margin-bottom:20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                     <span style="font-weight:600;">Recent Notifications</span>
                     <form asp-action="MarkNotificationsRead" method="post" style="display:inline;">
                         <button type="submit" class="mm-btn mm-btn-outline mm-btn-sm">Mark all read</button>
@@ -98,11 +105,11 @@
                 </div>
                 @foreach (var n in (List<MoneyTransferApp.Models.Notification>)ViewBag.Notifications)
                 {
-                    <div style="padding:8px 0; border-bottom:0.5px solid #e2e8f0; font-size:0.88rem; display:flex; gap:10px; align-items:flex-start;">
-                        <span style="color:@(n.IsRead ? "#6b7a8d" : "var(--mm-blue)"); font-size:0.7rem; margin-top:3px;">@(n.IsRead ? "●" : "◉")</span>
+                    <div style="padding:8px 0;border-bottom:0.5px solid #e2e8f0;font-size:0.88rem;display:flex;gap:10px;align-items:flex-start;">
+                        <span style="color:@(n.IsRead ? "#6b7a8d" : "var(--mm-blue)");font-size:0.7rem;margin-top:3px;">@(n.IsRead ? "●" : "◉")</span>
                         <div>
                             <div style="color:@(n.IsRead ? "#6b7a8d" : "#1a2332");">@n.Message</div>
-                            <div style="font-size:0.75rem; color:#6b7a8d; margin-top:2px;">@n.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                            <div style="font-size:0.75rem;color:#6b7a8d;margin-top:2px;">@n.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
                         </div>
                     </div>
                 }
@@ -117,7 +124,9 @@
             </div>
             @if (ViewBag.RecentTx == null || !((List<MoneyTransferApp.Models.Transaction>)ViewBag.RecentTx).Any())
             {
-                <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No transactions yet. <a asp-action="Transfer">Send your first transfer →</a></div>
+                <div style="padding:28px 20px;color:#6b7a8d;text-align:center;">
+                    No transactions yet. <a asp-action="Transfer">Send your first transfer →</a>
+                </div>
             }
             else
             {

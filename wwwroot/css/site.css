@@ -72,8 +72,9 @@ a {
 }
 
     .mm-navbar-brand img {
-        width: 36px;
-        height: 36px;
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
         border-radius: 8px;
     }
 
@@ -649,9 +650,11 @@ a {
 }
 
     .mm-auth-logo img {
-        width: 52px;
-        height: 52px;
-        margin-bottom: 12px;
+        width: 140px;
+        height: 140px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto 12px auto;
     }
 
     .mm-auth-logo h1 {
