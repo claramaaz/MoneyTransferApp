@@ -1,1 +1,212 @@
-﻿
+﻿@* ============================================================
+   Views/User/Dashboard.cshtml
+   Model: MoneyTransferApp.Models.User
+   ============================================================ *@
+
+@model MoneyTransferApp.Models.User
+@using MoneyTransferApp.Models
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Dashboard";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    @Html.Partial("_UserNav")
+
+    <div class="mm-container">
+
+        <p class="mm-page-title">Welcome back, @Model.FullName! 👋</p>
+        <p class="mm-page-subtitle">Here's an overview of your account</p>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="mm-alert mm-alert-success">@TempData["Success"]</div>
+        }
+
+        @* ── KPI Cards ── *@
+        <div class="mm-stats-grid">
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Balance (USD)</div>
+                    <div class="sc-value" style="color:var(--mm-teal);">$@Model.Balance.ToString("F2")</div>
+                </div>
+                <div class="sc-icon teal">💰</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Account Number</div>
+                    <div class="sc-value" style="font-size:1rem; font-family:monospace;">@Model.AccountNumber</div>
+                </div>
+                <div class="sc-icon blue">🪪</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Transfers Sent</div>
+                    <div class="sc-value">@(ViewBag.TotalSent ?? 0)</div>
+                </div>
+                <div class="sc-icon blue">↑</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Transfers Received</div>
+                    <div class="sc-value">@(ViewBag.TotalReceived ?? 0)</div>
+                </div>
+                <div class="sc-icon green">↓</div>
+            </div>
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Unread Notifications</div>
+                    <div class="sc-value" style="color:@(ViewBag.UnreadCount > 0 ? "#c77800" : "inherit");">@(ViewBag.UnreadCount ?? 0)</div>
+                </div>
+                <div class="sc-icon orange">🔔</div>
+            </div>
+        </div>
+
+        @* ── Quick Actions ── *@
+        <div class="mm-action-grid">
+            <a asp-action="Transfer" class="mm-action-card">
+                <div class="ac-icon blue">⇄</div>
+                <div class="ac-text">
+                    <div class="ac-title">Send Money</div>
+                    <div class="ac-desc">Transfer to account or phone</div>
+                </div>
+            </a>
+            <a asp-action="TopUp" class="mm-action-card">
+                <div class="ac-icon green">+</div>
+                <div class="ac-text">
+                    <div class="ac-title">Top Up</div>
+                    <div class="ac-desc">Add funds to your account</div>
+                </div>
+            </a>
+            <a asp-action="Beneficiaries" class="mm-action-card">
+                <div class="ac-icon purple">👥</div>
+                <div class="ac-text">
+                    <div class="ac-title">Beneficiaries</div>
+                    <div class="ac-desc">Manage saved recipients</div>
+                </div>
+            </a>
+            <a asp-action="AgentMap" class="mm-action-card">
+                <div class="ac-icon green">📍</div>
+                <div class="ac-text">
+                    <div class="ac-title">Find Agents</div>
+                    <div class="ac-desc">Locate nearby agent stores</div>
+                </div>
+            </a>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+
+            @* ── Recent Transactions ── *@
+            <div class="mm-table-wrap">
+                <div class="mm-table-header">
+                    <span class="th-title">Recent Transactions</span>
+                    <a asp-action="Transactions" class="th-link">View All →</a>
+                </div>
+                @{
+                    var recentTx = ViewBag.RecentTx as IEnumerable<Transaction>;
+                }
+                @if (recentTx == null || !recentTx.Any())
+                {
+                    <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No transactions yet.</div>
+                }
+                else
+                {
+                    <table class="mm-table">
+                        <tbody>
+                            @foreach (var t in recentTx)
+                            {
+                                var isSent = t.SenderId == Model.Id;
+                                <tr>
+                                    <td>
+                                        <div class="mm-txn-row">
+                                            <div class="mm-avatar @(isSent ? "cash-out" : "cash-in")">
+                                                @(isSent ? "↑" : "↓")
+                                            </div>
+                                            <div>
+                                                <div class="mm-txn-name">
+                                                    @(isSent
+                                                                                                ? (t.Recipient?.FullName ?? t.RecipientName ?? t.RecipientPhone ?? "External")
+                                                                                                : (t.Sender?.FullName ?? "MoneyMoney"))
+                                        </div>
+                                        <div class="mm-txn-serial">@t.SerialNumber</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="mm-txn-amount" style="color:@(isSent ? "#ef4444" : "var(--mm-green)");">
+                                    @(isSent ? "-" : "+")@t.ConvertedAmount.ToString("F2") USD
+                                </div>
+                                <div style="font-size:0.75rem; color:#6b7a8d;">@t.CreatedAt.ToString("dd/MM/yyyy")</div>
+                            </td>
+                            <td><span class="mm-badge @t.Status.ToString().ToLower()">@t.Status</span></td>
+                        </tr>
+                                                }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+            @* ── Notifications ── *@
+            <div class="mm-table-wrap">
+                <div class="mm-table-header">
+                    <span class="th-title">
+                        Notifications
+                        @if (ViewBag.UnreadCount > 0)
+                        {
+                            <span class="mm-badge pending" style="margin-left:6px;">@ViewBag.UnreadCount new</span>
+                        }
+                    </span>
+                    @if (ViewBag.UnreadCount > 0)
+                    {
+                        <form asp-action="MarkNotificationsRead" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" style="background:none;border:none;cursor:pointer;font-size:0.82rem;color:var(--mm-blue);">Mark all read</button>
+                        </form>
+                    }
+                </div>
+                @{
+                    var notifications = ViewBag.Notifications as IEnumerable<Notification>;
+                }
+                @if (notifications == null || !notifications.Any())
+                {
+                    <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No notifications.</div>
+                }
+                else
+                {
+                    <div style="display:flex; flex-direction:column;">
+                        @foreach (var n in notifications)
+                        {
+                            <div style="padding:12px 20px; border-bottom:1px solid var(--mm-border); @(!n.IsRead ? "background:rgba(20,144,220,0.04);" : "")">
+                                <div style="display:flex; gap:10px; align-items:flex-start;">
+                                    <span style="font-size:1.1rem;">
+                                        @(n.Type == "transfer" ? "⇄" : n.Type == "topup" ? "💰" : n.Type == "agent" ? "🏪" : "ℹ️")
+                                    </span>
+                                    <div style="flex:1;">
+                                        <div style="font-size:0.88rem; @(!n.IsRead ? "font-weight:600;" : "")">@n.Message</div>
+                                        <div style="font-size:0.75rem; color:#6b7a8d; margin-top:3px;">@n.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                    </div>
+                                    @if (!n.IsRead)
+                                    {
+                                        <div style="width:8px;height:8px;border-radius:50%;background:var(--mm-blue);flex-shrink:0;margin-top:5px;"></div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

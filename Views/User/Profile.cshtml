@@ -1,1 +1,141 @@
-﻿
+﻿@model MoneyTransferApp.Models.User
+@using MoneyTransferApp.Models
+
+@{
+    Layout = null;
+    var currencies = ViewBag.Currencies as List<Currency> ?? new List<Currency>();
+    string preferred = Model != null ? Model.PreferredCurrency : "USD";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    @Html.Partial("_UserNav")
+
+    <div class="mm-container">
+
+        <p class="mm-page-title">My Profile</p>
+        <p class="mm-page-subtitle">View and manage your account details</p>
+
+        @if (ViewBag.Success != null)
+        {
+            <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
+        }
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+
+            @* Account Info Card *@
+            <div class="mm-card">
+
+                <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--mm-border);">
+                    <div style="width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg, var(--mm-blue), var(--mm-teal)); display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:700; color:white; flex-shrink:0;">
+                        @(Model != null && Model.FullName.Length > 0 ? Model.FullName[0].ToString().ToUpper() : "?")
+                    </div>
+                    <div>
+                        <div style="font-size:1.2rem; font-weight:700;">@(Model != null ? Model.FullName : "")</div>
+                        <div style="font-size:0.88rem; color:#6b7a8d;">@(Model != null ? Model.Email : "")</div>
+                        <span class="mm-badge active" style="margin-top:4px;">User Account</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:0;">
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--mm-border);">
+                        <span style="font-size:0.85rem; color:#6b7a8d; font-weight:500;">Account Number</span>
+                        <span style="font-family:monospace; font-weight:600; font-size:0.9rem;">@(Model != null ? Model.AccountNumber : "")</span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--mm-border);">
+                        <span style="font-size:0.85rem; color:#6b7a8d; font-weight:500;">Balance</span>
+                        <span style="font-weight:700; font-size:1.1rem; color:var(--mm-teal);">
+                            $@(Model != null ? Model.Balance.ToString("F2") : "0.00") USD
+                        </span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--mm-border);">
+                        <span style="font-size:0.85rem; color:#6b7a8d; font-weight:500;">Preferred Currency</span>
+                        <span class="mm-badge active">@preferred</span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--mm-border);">
+                        <span style="font-size:0.85rem; color:#6b7a8d; font-weight:500;">Email</span>
+                        <span style="font-size:0.88rem;">@(Model != null ? Model.Email : "")</span>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0;">
+                        <span style="font-size:0.85rem; color:#6b7a8d; font-weight:500;">Member Since</span>
+                        <span style="font-size:0.88rem; color:#6b7a8d;">
+                            @(Model != null ? Model.CreatedAt.ToString("MMMM dd, yyyy") : "")
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+
+            @* Right Column *@
+            <div style="display:flex; flex-direction:column; gap:20px;">
+
+                @* Update Currency *@
+                <div class="mm-card">
+                    <div style="font-weight:700; font-size:1rem; margin-bottom:16px;">Update Preferred Currency</div>
+                    <form asp-action="UpdateProfile" asp-controller="User" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mm-form-group">
+                            <label>Select Currency</label>
+                            <select name="preferredCurrency">
+                                @foreach (Currency c in currencies)
+                                {
+                                    if (c.Code == preferred)
+                                    {
+                                        <option value="@c.Code" selected="selected">@c.Code — @c.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@c.Code">@c.Code — @c.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="mm-btn mm-btn-primary">Save Changes</button>
+                    </form>
+                </div>
+
+                @* Become an Agent *@
+                <div class="mm-card">
+                    <div style="font-weight:700; font-size:1rem; margin-bottom:8px;">Become an Agent</div>
+                    <p style="font-size:0.85rem; color:#6b7a8d; margin-bottom:16px; line-height:1.6;">
+                        Want to earn commissions by helping customers send and receive money? Apply to become a Money Money agent partner.
+                    </p>
+                    <a asp-action="BecomeAgent" asp-controller="User" class="mm-btn mm-btn-teal">Apply as Agent</a>
+                </div>
+
+                @* Quick Links *@
+                <div class="mm-card">
+                    <div style="font-weight:700; font-size:1rem; margin-bottom:16px;">Quick Actions</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <a asp-action="Transfer" asp-controller="User" class="mm-btn mm-btn-outline mm-btn-full" style="text-align:left; padding:10px 14px;">
+                            Send Money
+                        </a>
+                        <a asp-action="TopUp" asp-controller="User" class="mm-btn mm-btn-outline mm-btn-full" style="text-align:left; padding:10px 14px;">
+                            Top Up Account
+                        </a>
+                        <a asp-action="Transactions" asp-controller="User" class="mm-btn mm-btn-outline mm-btn-full" style="text-align:left; padding:10px 14px;">
+                            Transaction History
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

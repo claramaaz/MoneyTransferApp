@@ -1,1 +1,237 @@
-﻿
+﻿@* ============================================================
+   Views/User/Transfer.cshtml
+   No model — uses ViewBag.Beneficiaries + ViewBag.Currencies
+   ============================================================ *@
+
+@using MoneyTransferApp.Models
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Transfer Money";
+    var beneficiaries = ViewBag.Beneficiaries as IEnumerable<Beneficiary> ?? new List<Beneficiary>();
+    var currencies = ViewBag.Currencies as IEnumerable<Currency> ?? new List<Currency>();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transfer - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    @Html.Partial("_UserNav")
+
+    <div class="mm-container">
+
+        <p class="mm-page-title">Send Money</p>
+        <p class="mm-page-subtitle">Transfer funds to a saved beneficiary or any account/phone number</p>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="mm-alert mm-alert-error">@ViewBag.Error</div>
+        }
+        @if (ViewBag.Success != null)
+        {
+            <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
+        }
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+
+            @* ── OPTION 1: Saved Beneficiary ── *@
+            <div class="mm-card">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                    <div style="width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:var(--mm-blue);color:white;">👥</div>
+                    <div>
+                        <div style="font-weight:700; font-size:1.05rem;">Transfer to Beneficiary</div>
+                        <div style="font-size:0.8rem;color:#6b7a8d;">Select from your saved recipients</div>
+                    </div>
+                </div>
+
+                @if (!beneficiaries.Any())
+                {
+                    <div class="mm-alert mm-alert-info" style="margin-bottom:16px;">
+                        No saved beneficiaries yet. <a asp-action="AddBeneficiary">Add one →</a>
+                    </div>
+                }
+
+                <form asp-action="Transfer" asp-controller="User" method="post" id="form-beneficiary">
+                    <div class="mm-form-group">
+                        <label>Select Beneficiary</label>
+                        <select name="recipientAccount" id="bene-select" onchange="fillBeneficiary(this)" @(!beneficiaries.Any() ? "disabled" : "")>
+                            <option value="">— Choose a beneficiary —</option>
+                            @foreach (var b in beneficiaries)
+                            {
+                                <option value="@b.AccountNumber"
+                                        data-phone="@b.PhoneNumber"
+                                        data-name="@b.FullName"
+                                        data-currency="@b.Currency">
+                                    @b.FullName @(!string.IsNullOrEmpty(b.Nickname) ? $"({b.Nickname})" : "") — @(b.AccountNumber ?? b.PhoneNumber)
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <input type="hidden" name="recipientPhone" id="bene-phone" value="" />
+                    <input type="hidden" name="recipientName" id="bene-name" value="" />
+
+                    <div class="mm-form-grid-2">
+                        <div class="mm-form-group">
+                            <label>Amount</label>
+                            <input type="number" name="amount" id="b-amount" step="0.01" min="0.01"
+                                   placeholder="0.00" oninput="calcPreview('b')" required />
+                        </div>
+                        <div class="mm-form-group">
+                            <label>From Currency</label>
+                            <select name="fromCurrency" id="b-from" onchange="calcPreview('b')">
+                                @foreach (var c in currencies)
+                                {
+                                    <option value="@c.Code" data-rate="@c.ExchangeRate">
+                                        @(c.FlagEmoji) @c.Code
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>To Currency</label>
+                        <select name="toCurrency" id="b-to">
+                            @foreach (var c in currencies)
+                            {
+                                <option value="@c.Code">@(c.FlagEmoji) @c.Code — @c.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>Note (optional)</label>
+                        <input type="text" name="note" placeholder="e.g. Rent payment" />
+                    </div>
+
+                    @* Live conversion preview *@
+                    <div id="b-preview" class="mm-alert mm-alert-info" style="display:none; margin-bottom:16px;">
+                        <strong>Estimated:</strong> <span id="b-preview-text"></span>
+                    </div>
+
+                    <button type="submit" class="mm-btn mm-btn-primary mm-btn-full" @(!beneficiaries.Any() ? "disabled" : "")>
+                        Send to Beneficiary
+                    </button>
+                </form>
+            </div>
+
+            @* ── OPTION 2: OMT-style (phone + name) ── *@
+            <div class="mm-card">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                    <div style="width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;background:var(--mm-teal);color:white;">📱</div>
+                    <div>
+                        <div style="font-weight:700; font-size:1.05rem;">Transfer by Phone / Account</div>
+                        <div style="font-size:0.8rem;color:#6b7a8d;">OMT-style — enter recipient details manually</div>
+                    </div>
+                </div>
+
+                <form asp-action="Transfer" asp-controller="User" method="post" id="form-manual">
+
+                    <div class="mm-form-group">
+                        <label>Recipient Account Number <span style="color:#6b7a8d; font-weight:400;">(optional)</span></label>
+                        <input type="text" name="recipientAccount" placeholder="ACC-2026-XXXXX" />
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>Recipient Phone <span style="color:#6b7a8d; font-weight:400;">(optional)</span></label>
+                        <input type="text" name="recipientPhone" placeholder="+961 70 000 000" />
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>Recipient Full Name</label>
+                        <input type="text" name="recipientName" placeholder="John Doe" />
+                    </div>
+
+                    <div class="mm-form-grid-2">
+                        <div class="mm-form-group">
+                            <label>Amount</label>
+                            <input type="number" name="amount" id="m-amount" step="0.01" min="0.01"
+                                   placeholder="0.00" oninput="calcPreview('m')" required />
+                        </div>
+                        <div class="mm-form-group">
+                            <label>From Currency</label>
+                            <select name="fromCurrency" id="m-from" onchange="calcPreview('m')">
+                                @foreach (var c in currencies)
+                                {
+                                    <option value="@c.Code" data-rate="@c.ExchangeRate">
+                                        @(c.FlagEmoji) @c.Code
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>To Currency</label>
+                        <select name="toCurrency" id="m-to">
+                            @foreach (var c in currencies)
+                            {
+                                <option value="@c.Code">@(c.FlagEmoji) @c.Code — @c.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>Note (optional)</label>
+                        <input type="text" name="note" placeholder="e.g. Family support" />
+                    </div>
+
+                    @* Live conversion preview *@
+                    <div id="m-preview" class="mm-alert mm-alert-info" style="display:none; margin-bottom:16px;">
+                        <strong>Estimated:</strong> <span id="m-preview-text"></span>
+                    </div>
+
+                    <button type="submit" class="mm-btn mm-btn-teal mm-btn-full">Send Money</button>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="mm-alert mm-alert-info" style="margin-top:16px;">
+            <strong>Note:</strong> All balances are stored in USD. Amounts in other currencies are converted automatically using current exchange rates set by the admin.
+        </div>
+
+    </div>
+
+    <script>
+        // Store currency rates for live preview
+        var rates = {};
+        @foreach (var c in currencies)
+        {
+                <text>rates['@c.Code'] = @c.ExchangeRate.ToString(System.Globalization.CultureInfo.InvariantCulture);</text>
+        }
+
+        function calcPreview(prefix) {
+            var amount = parseFloat(document.getElementById(prefix + '-amount').value);
+            var fromSel = document.getElementById(prefix + '-from');
+            var fromCode = fromSel.value;
+            var preview = document.getElementById(prefix + '-preview');
+            var previewText = document.getElementById(prefix + '-preview-text');
+
+            if (isNaN(amount) || amount <= 0) {
+                preview.style.display = 'none';
+                return;
+            }
+
+            var rate = rates[fromCode] || 1;
+            var usd = (amount / rate).toFixed(2);
+            previewText.textContent = amount + ' ' + fromCode + ' ≈ ' + usd + ' USD';
+            preview.style.display = 'block';
+        }
+
+        function fillBeneficiary(sel) {
+            var opt = sel.options[sel.selectedIndex];
+            document.getElementById('bene-phone').value = opt.getAttribute('data-phone') || '';
+            document.getElementById('bene-name').value = opt.getAttribute('data-name') || '';
+        }
+    </script>
+
+</body>
+</html>

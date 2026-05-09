@@ -1,1 +1,123 @@
-﻿
+﻿@* ============================================================
+   Views/User/Transactions.cshtml
+   Model: IEnumerable<MoneyTransferApp.Models.Transaction>
+   ============================================================ *@
+
+@model IEnumerable<MoneyTransferApp.Models.Transaction>
+@using MoneyTransferApp.Models
+
+@{
+    Layout = null;
+    ViewData["Title"] = "My Transactions";
+    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transactions - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    @Html.Partial("_UserNav")
+
+    <div class="mm-container">
+
+        <p class="mm-page-title">Transaction History</p>
+        <p class="mm-page-subtitle">All your transfers, top-ups and cash operations</p>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="mm-alert mm-alert-success">@TempData["Success"]</div>
+        }
+
+        <div class="mm-table-wrap">
+            <div class="mm-table-header">
+                <span class="th-title">All Transactions</span>
+                <span style="font-size:0.85rem; color:var(--mm-muted);">@(Model?.Count() ?? 0) total</span>
+            </div>
+
+            @if (Model == null || !Model.Any())
+            {
+                <div style="padding:40px 20px; color:#6b7a8d; text-align:center;">
+                    <div style="font-size:2rem; margin-bottom:10px;">📂</div>
+                    <div>No transactions yet. <a asp-action="TopUp">Top up your account</a> to get started!</div>
+                </div>
+            }
+            else
+            {
+                <div style="overflow-x:auto;">
+                    <table class="mm-table">
+                        <thead>
+                            <tr>
+                                <th>Transaction</th>
+                                <th>Amount</th>
+                                <th>USD Equivalent</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model)
+                            {
+                                var isSent = t.SenderId == userId;
+                                var counterparty = isSent
+                                ? (t.Recipient?.FullName ?? t.RecipientName ?? t.RecipientPhone ?? "External")
+                                : (t.Sender?.FullName ?? "MoneyMoney");
+                                var typeIcon = t.Type switch
+                                {
+                                    TransactionType.CashIn => "↓",
+                                    TransactionType.CashOut => "↑",
+                                    TransactionType.TopUp => "💰",
+                                    _ => isSent ? "↑" : "↓"
+                                };
+                                var avatarClass = t.Type == TransactionType.TopUp || t.Type == TransactionType.CashIn ? "cash-in"
+                                : isSent ? "cash-out" : "cash-in";
+
+                                <tr>
+                                    <td>
+                                        <div class="mm-txn-row">
+                                            <div class="mm-avatar @avatarClass">@typeIcon</div>
+                                            <div>
+                                                <div class="mm-txn-name">@counterparty</div>
+                                                <div class="mm-txn-serial">@t.SerialNumber</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="font-weight:600;">
+                                        @t.Amount.ToString("F2") @t.FromCurrency
+                                        @if (t.FromCurrency != t.ToCurrency)
+                                        {
+                                            <div style="font-size:0.75rem; color:#6b7a8d;">→ @t.ToCurrency</div>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span style="font-weight:600; color:@(isSent && t.Type == TransactionType.Transfer ? "#ef4444" : "var(--mm-teal)");">
+                                            @(isSent && t.Type == TransactionType.Transfer ? "-" : "+")@t.ConvertedAmount.ToString("F2") USD
+                                        </span>
+                                        @if (t.ExchangeRateUsed != 1 && t.ExchangeRateUsed != 0)
+                                        {
+                                            <div style="font-size:0.72rem; color:#6b7a8d;">Rate: @t.ExchangeRateUsed.ToString("F4")</div>
+                                        }
+                                    </td>
+                                    <td><span class="mm-badge active">@t.Type</span></td>
+                                    <td><span class="mm-badge @t.Status.ToString().ToLower()">@t.Status</span></td>
+                                    <td style="font-size:0.83rem; color:#6b7a8d;">
+                                        @t.CreatedAt.ToString("dd/MM/yyyy")<br />
+                                        <span style="font-size:0.75rem;">@t.CreatedAt.ToString("HH:mm")</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+    </div>
+</body>
+</html>

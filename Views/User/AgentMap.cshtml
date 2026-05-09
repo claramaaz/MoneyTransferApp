@@ -1,1 +1,141 @@
-﻿
+﻿@model IEnumerable<MoneyTransferApp.Models.Agent>
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Find Agents - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 480px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            z-index: 0;
+        }
+
+        .agent-item {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+        }
+
+            .agent-item:hover {
+                background: #f0f8ff;
+            }
+
+            .agent-item:last-child {
+                border-bottom: none;
+            }
+    </style>
+</head>
+<body>
+
+    @Html.Partial("_UserNav")
+
+    <div class="mm-container">
+
+        <p class="mm-page-title">Find Agent Stores</p>
+        <p class="mm-page-subtitle">Locate Money Money partner stores near you for cash-in and cash-out</p>
+
+        <div class="mm-stats-grid" style="max-width:400px; margin-bottom:20px;">
+            <div class="mm-stat-card">
+                <div class="sc-info">
+                    <div class="sc-label">Approved Agents</div>
+                    <div class="sc-value" style="color:var(--mm-teal);">@(Model != null ? Model.Count() : 0)</div>
+                </div>
+                <div class="sc-icon teal">★</div>
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start;">
+
+            <div>
+                <div id="map"></div>
+            </div>
+
+            <div class="mm-table-wrap" style="max-height:520px; overflow-y:auto;">
+                <div class="mm-table-header">
+                    <span class="th-title">Agent Locations</span>
+                </div>
+
+                @if (Model == null || !Model.Any())
+                {
+                    <div style="padding:28px 20px; color:#6b7a8d; text-align:center;">No approved agents found.</div>
+                }
+                else
+                {
+                    @foreach (var agent in Model)
+                    {
+                        <div class="agent-item"
+                             onclick="focusAgent(@agent.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture), @agent.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture))">
+                            <div style="font-weight:600; margin-bottom:3px;">@agent.StoreName</div>
+                            <div style="font-size:0.82rem; color:#6b7a8d;">@agent.Address</div>
+                            @if (!string.IsNullOrEmpty(agent.Phone))
+                            {
+                                <div style="font-size:0.8rem; color:#6b7a8d;">@agent.Phone</div>
+                            }
+                            @if (!string.IsNullOrEmpty(agent.WorkingHours))
+                            {
+                                <div style="font-size:0.8rem; color:var(--mm-teal);">@agent.WorkingHours</div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+        </div>
+
+        <div class="mm-alert mm-alert-info" style="margin-top:20px;">
+            <strong>Tip:</strong> Visit any agent store to deposit or withdraw money from your account.
+        </div>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+
+        var map = L.map('map').setView([33.8938, 35.5018], 9);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+
+        var agentIcon = L.divIcon({
+            html: '<div style="background:#00b48c;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.35);"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+            className: ''
+        });
+
+        @if (Model != null)
+        {
+                foreach (var agent in Model)
+                {
+                        var lat = agent.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                        var lng = agent.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                        var storeName = agent.StoreName.Replace("'", "");
+                        var address = agent.Address.Replace("'", "");
+                        <text>
+                L.marker([@lat, @lng], { icon: agentIcon })
+                    .addTo(map)
+                    .bindPopup('<strong>@storeName</strong><br>@address');
+                        </text>
+                }
+        }
+
+        function focusAgent(lat, lng) {
+            map.setView([lat, lng], 15);
+        }
+
+    </script>
+
+</body>
+</html>

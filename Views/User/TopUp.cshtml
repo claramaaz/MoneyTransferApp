@@ -1,1 +1,136 @@
-﻿
+﻿@* ============================================================
+   Views/User/TopUp.cshtml
+   No model — uses ViewBag.Currencies
+   ============================================================ *@
+
+@using MoneyTransferApp.Models
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Top Up Account";
+    var currencies = ViewBag.Currencies as IEnumerable<Currency> ?? new List<Currency>();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top Up - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    @Html.Partial("_UserNav")
+
+    <div class="mm-container">
+
+        <p class="mm-page-title">Top Up Account</p>
+        <p class="mm-page-subtitle">Add funds to your Money Money balance</p>
+
+        @if (ViewBag.Success != null)
+        {
+            <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
+        }
+        @if (ViewBag.Error != null)
+        {
+            <div class="mm-alert mm-alert-error">@ViewBag.Error</div>
+        }
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; max-width:860px;">
+
+            @* ── Top Up Form ── *@
+            <div class="mm-card">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px;">
+                    <div style="width:46px;height:46px;border-radius:12px;background:var(--mm-teal);color:white;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">💰</div>
+                    <div>
+                        <div style="font-weight:700; font-size:1.05rem;">Add Funds</div>
+                        <div style="font-size:0.8rem;color:#6b7a8d;">Simulated top-up (no real payment)</div>
+                    </div>
+                </div>
+
+                <form asp-action="TopUp" asp-controller="User" method="post">
+
+                    <div class="mm-form-group">
+                        <label>Currency</label>
+                        <select name="currency" id="topup-currency" onchange="calcTopUp()">
+                            @foreach (var c in currencies)
+                            {
+                                <option value="@c.Code" data-rate="@c.ExchangeRate">
+                                    @(c.FlagEmoji) @c.Code — @c.Name (@c.Symbol)
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>Amount</label>
+                        <input type="number" name="amount" id="topup-amount" step="0.01" min="1"
+                               placeholder="0.00" oninput="calcTopUp()" required />
+                    </div>
+
+                    @* Live conversion preview *@
+                    <div id="topup-preview" class="mm-alert mm-alert-info" style="display:none; margin-bottom:16px;">
+                        You will receive: <strong id="topup-usd">0.00 USD</strong>
+                    </div>
+
+                    <button type="submit" class="mm-btn mm-btn-teal mm-btn-full">Top Up Now</button>
+
+                </form>
+            </div>
+
+            @* ── Info Panel ── *@
+            <div>
+                <div class="mm-card">
+                    <div style="font-weight:700; font-size:1rem; margin-bottom:16px;">💡 How it works</div>
+                    <div style="font-size:0.88rem; color:#6b7a8d; line-height:1.7;">
+                        <p style="margin-bottom:10px;">1. Select your preferred currency and enter the amount.</p>
+                        <p style="margin-bottom:10px;">2. The amount is automatically converted to USD using the current exchange rate.</p>
+                        <p style="margin-bottom:10px;">3. Your balance is updated instantly and a transaction record is created.</p>
+                        <p>4. You will receive an in-app notification confirming the top-up.</p>
+                    </div>
+                </div>
+
+                <div class="mm-card" style="margin-top:0;">
+                    <div style="font-weight:700; font-size:0.95rem; margin-bottom:12px;">📊 Current Exchange Rates</div>
+                    @foreach (var c in currencies)
+                    {
+                        <div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--mm-border); font-size:0.85rem;">
+                            <span>@(c.FlagEmoji) @c.Code</span>
+                            <span style="color:var(--mm-muted);">1 USD = @c.ExchangeRate.ToString("F2") @c.Code</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        var rates = {};
+        @foreach (var c in currencies)
+        {
+                <text>rates['@c.Code'] = @c.ExchangeRate.ToString(System.Globalization.CultureInfo.InvariantCulture);</text>
+        }
+
+        function calcTopUp() {
+            var amount = parseFloat(document.getElementById('topup-amount').value);
+            var currency = document.getElementById('topup-currency').value;
+            var preview = document.getElementById('topup-preview');
+            var usdSpan = document.getElementById('topup-usd');
+
+            if (isNaN(amount) || amount <= 0) {
+                preview.style.display = 'none';
+                return;
+            }
+
+            var rate = rates[currency] || 1;
+            var usd = (amount / rate).toFixed(2);
+            usdSpan.textContent = usd + ' USD';
+            preview.style.display = 'block';
+        }
+    </script>
+
+</body>
+</html>

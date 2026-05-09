@@ -1,1 +1,119 @@
-﻿
+﻿@* ============================================================
+   Views/User/Beneficiaries.cshtml
+   Model: IEnumerable<MoneyTransferApp.Models.Beneficiary>
+   ============================================================ *@
+
+@model IEnumerable<MoneyTransferApp.Models.Beneficiary>
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Beneficiaries";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beneficiaries - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    @Html.Partial("_UserNav")
+
+    <div class="mm-container">
+
+        <p class="mm-page-title">My Beneficiaries</p>
+        <p class="mm-page-subtitle">Manage your saved recipients for quick transfers</p>
+
+        @if (ViewBag.Success != null)
+        {
+            <div class="mm-alert mm-alert-success">@ViewBag.Success</div>
+        }
+
+        <div style="margin-bottom:20px;">
+            <a asp-action="AddBeneficiary" class="mm-btn mm-btn-primary">+ Add New Beneficiary</a>
+        </div>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="mm-card" style="text-align:center; padding:48px 24px;">
+                <div style="font-size:3rem; margin-bottom:12px;">👥</div>
+                <p class="mm-page-title" style="font-size:1.1rem;">No beneficiaries yet</p>
+                <p class="mm-page-subtitle">Save your frequent recipients to send money faster.</p>
+                <a asp-action="AddBeneficiary" class="mm-btn mm-btn-primary">Add your first beneficiary</a>
+            </div>
+        }
+        else
+        {
+            <div class="mm-table-wrap">
+                <div class="mm-table-header">
+                    <span class="th-title">Saved Recipients</span>
+                    <span style="font-size:0.85rem; color:var(--mm-muted);">@Model.Count() total</span>
+                </div>
+                <table class="mm-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Account / Phone</th>
+                            <th>Currency</th>
+                            <th>Country</th>
+                            <th>Added</th>
+                            <th style="text-align:center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <div style="width:36px;height:36px;border-radius:50%;background:rgba(20,144,220,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:var(--mm-blue);flex-shrink:0;">
+                                            @(b.FullName?.Length > 0 ? b.FullName[0].ToString().ToUpper() : "?")
+                                        </div>
+                                        <div>
+                                            <div style="font-weight:600;">@b.FullName</div>
+                                            @if (!string.IsNullOrEmpty(b.Nickname))
+                                            {
+                                                <div style="font-size:0.78rem; color:#6b7a8d;">@b.Nickname</div>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="font-family:monospace; font-size:0.85rem;">
+                                    @if (!string.IsNullOrEmpty(b.AccountNumber))
+                                    {
+                                        <div>@b.AccountNumber</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(b.PhoneNumber))
+                                    {
+                                        <div style="color:#6b7a8d;">📱 @b.PhoneNumber</div>
+                                    }
+                                </td>
+                                <td><span class="mm-badge active">@b.Currency</span></td>
+                                <td style="color:#6b7a8d;">@(b.Country ?? "—")</td>
+                                <td style="font-size:0.82rem; color:#6b7a8d;">@b.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td style="text-align:center;">
+                                    <div style="display:flex; gap:8px; justify-content:center;">
+                                        <a asp-action="Transfer" asp-route-recipientAccount="@b.AccountNumber"
+                                           class="mm-btn mm-btn-teal mm-btn-sm">Send</a>
+                                        <form asp-action="DeleteBeneficiary" asp-route-id="@b.Id" method="post" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="mm-btn mm-btn-danger mm-btn-sm"
+                                                    onclick="return confirm('Remove @b.FullName from beneficiaries?')">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </div>
+</body>
+</html>

@@ -1,1 +1,131 @@
-﻿
+﻿@model MoneyTransferApp.Models.Beneficiary
+
+@{
+    Layout = null;
+    string selectedCurrency = Model != null ? Model.Currency : "USD";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Beneficiary - Money Money</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+    @Html.Partial("_UserNav")
+
+    <div class="mm-container">
+
+        <p class="mm-page-title">Add Beneficiary</p>
+        <p class="mm-page-subtitle">Save a new recipient for quick future transfers</p>
+
+        <div style="max-width:620px;">
+            <div class="mm-card">
+                <form asp-action="AddBeneficiary" asp-controller="User" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mm-form-group">
+                        <label>Full Name *</label>
+                        <input type="text" name="FullName" placeholder="e.g. John Doe" required
+                               value="@(Model != null ? Model.FullName : "")" />
+                    </div>
+
+                    <div class="mm-form-grid-2">
+                        <div class="mm-form-group">
+                            <label>Account Number (optional)</label>
+                            <input type="text" name="AccountNumber" placeholder="ACC-2026-XXXXX"
+                                   value="@(Model != null ? Model.AccountNumber : "")" />
+                        </div>
+                        <div class="mm-form-group">
+                            <label>Phone Number (optional)</label>
+                            <input type="text" name="PhoneNumber" placeholder="+961 70 000 000"
+                                   value="@(Model != null ? Model.PhoneNumber : "")" />
+                        </div>
+                    </div>
+
+                    <div class="mm-alert mm-alert-info" style="margin-bottom:16px; font-size:0.83rem;">
+                        Provide at least one of Account Number or Phone Number.
+                    </div>
+
+                    <div class="mm-form-grid-2">
+                        <div class="mm-form-group">
+                            <label>Preferred Currency</label>
+                            <select name="Currency">
+                                @if (selectedCurrency == "USD")
+                                {
+                                    <option value="USD" selected="selected">USD — US Dollar</option>
+                                }
+                                else
+                                {
+                                    <option value="USD">USD — US Dollar</option>
+                                }
+                                @if (selectedCurrency == "EUR")
+                                {
+                                    <option value="EUR" selected="selected">EUR — Euro</option>
+                                }
+                                else
+                                {
+                                    <option value="EUR">EUR — Euro</option>
+                                }
+                                @if (selectedCurrency == "LBP")
+                                {
+                                    <option value="LBP" selected="selected">LBP — Lebanese Pound</option>
+                                }
+                                else
+                                {
+                                    <option value="LBP">LBP — Lebanese Pound</option>
+                                }
+                                @if (selectedCurrency == "AED")
+                                {
+                                    <option value="AED" selected="selected">AED — UAE Dirham</option>
+                                }
+                                else
+                                {
+                                    <option value="AED">AED — UAE Dirham</option>
+                                }
+                                @if (selectedCurrency == "SAR")
+                                {
+                                    <option value="SAR" selected="selected">SAR — Saudi Riyal</option>
+                                }
+                                else
+                                {
+                                    <option value="SAR">SAR — Saudi Riyal</option>
+                                }
+                                @if (selectedCurrency == "GBP")
+                                {
+                                    <option value="GBP" selected="selected">GBP — British Pound</option>
+                                }
+                                else
+                                {
+                                    <option value="GBP">GBP — British Pound</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="mm-form-group">
+                            <label>Country (optional)</label>
+                            <input type="text" name="Country" placeholder="e.g. Lebanon"
+                                   value="@(Model != null ? Model.Country : "")" />
+                        </div>
+                    </div>
+
+                    <div class="mm-form-group">
+                        <label>Nickname (optional)</label>
+                        <input type="text" name="Nickname" placeholder="e.g. Mom, Brother, Landlord"
+                               value="@(Model != null ? Model.Nickname : "")" />
+                    </div>
+
+                    <div style="display:flex; gap:12px; margin-top:8px;">
+                        <button type="submit" class="mm-btn mm-btn-primary">Save Beneficiary</button>
+                        <a asp-action="Beneficiaries" asp-controller="User" class="mm-btn mm-btn-outline">Cancel</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
