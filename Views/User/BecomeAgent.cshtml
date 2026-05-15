@@ -19,6 +19,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Become an Agent - Money Money</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        #pickMap {
+            height: 280px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            z-index: 0;
+            margin-top: 6px;
+        }
+        .map-hint {
+            font-size: 0.75rem;
+            color: #6b7a8d;
+            margin-top: 6px;
+            font-style: italic;
+        }
+        .example-btn {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(20,144,220,0.08);
+            border: 1px solid rgba(20,144,220,0.2);
+            border-radius: 20px;
+            font-size: 0.78rem;
+            color: #1490dc;
+            cursor: pointer;
+            margin: 3px;
+            transition: background 0.15s;
+        }
+        .example-btn:hover { background: rgba(20,144,220,0.15); }
+    </style>
 </head>
 <body>
 
@@ -67,45 +96,64 @@
         }
         else
         {
+            @* ── Quick fill examples ── *@
+            <div style="margin-bottom:14px;">
+                <span style="font-size:0.82rem; color:#6b7a8d; font-weight:500;">Quick fill example: </span>
+                <span class="example-btn" onclick="fillExample('hamra')">🏪 Hamra Store</span>
+                <span class="example-btn" onclick="fillExample('achrafieh')">🏪 Achrafieh Shop</span>
+                <span class="example-btn" onclick="fillExample('verdun')">🏪 Verdun Exchange</span>
+            </div>
+
             <div style="max-width:640px;">
                 <div class="mm-card">
                     <form asp-action="ApplyAsAgent" asp-controller="User" method="post">
 
                         <div class="mm-form-group">
                             <label>Store Name <span style="color:#ef4444;">*</span></label>
-                            <input type="text" name="storeName" placeholder="e.g. My Exchange Shop" required />
+                            <input type="text" id="storeName" name="storeName" placeholder="e.g. My Exchange Shop" required />
                         </div>
 
                         <div class="mm-form-group">
                             <label>Owner Name <span style="color:#ef4444;">*</span></label>
-                            <input type="text" name="ownerName" placeholder="Your full legal name" required />
+                            <input type="text" id="ownerName" name="ownerName" placeholder="Your full legal name" required />
                         </div>
 
                         <div class="mm-form-grid-2">
                             <div class="mm-form-group">
                                 <label>Phone Number <span style="color:#ef4444;">*</span></label>
-                                <input type="text" name="phone" placeholder="+961 70 000 000" required />
+                                <input type="text" id="phone" name="phone" placeholder="+961 70 000 000" required />
                             </div>
                             <div class="mm-form-group">
                                 <label>Working Hours <span style="color:#ef4444;">*</span></label>
-                                <input type="text" name="workingHours" placeholder="Mon-Sat 9AM-6PM" required />
+                                <input type="text" id="workingHours" name="workingHours" placeholder="Mon-Sat 9AM-6PM" required />
                             </div>
                         </div>
 
                         <div class="mm-form-group">
                             <label>Store Address <span style="color:#ef4444;">*</span></label>
-                            <input type="text" name="address" placeholder="Full address of your store" required />
+                            <input type="text" id="address" name="address" placeholder="Full address of your store" required />
                         </div>
 
                         <div class="mm-form-grid-2">
                             <div class="mm-form-group">
                                 <label>Latitude</label>
-                                <input type="number" name="latitude" step="0.0001" value="33.8938" placeholder="33.8938" />
+                                <input type="number" id="latInput" name="latitude"
+                                       step="0.0001" value="33.8938" placeholder="33.8938"
+                                       oninput="updateMapFromInputs()" />
                             </div>
                             <div class="mm-form-group">
                                 <label>Longitude</label>
-                                <input type="number" name="longitude" step="0.0001" value="35.5018" placeholder="35.5018" />
+                                <input type="number" id="lngInput" name="longitude"
+                                       step="0.0001" value="35.5018" placeholder="35.5018"
+                                       oninput="updateMapFromInputs()" />
                             </div>
+                        </div>
+
+                        @* ── Carte interactive ── *@
+                        <div class="mm-form-group">
+                            <label>Pin Your Store Location on the Map</label>
+                            <div id="pickMap"></div>
+                            <p class="map-hint">📍 Click anywhere on the map or drag the marker to set your store location. Coordinates update automatically.</p>
                         </div>
 
                         <div class="mm-alert mm-alert-info" style="margin-bottom:16px; font-size:0.83rem;">
@@ -123,5 +171,85 @@
         }
 
     </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // ── Init carte centrée sur Beyrouth ──────────────────
+        var map = L.map('pickMap').setView([33.8938, 35.5018], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Icône verte personnalisée
+        var icon = L.divIcon({
+            html: '<div style="background:#00b48c;width:18px;height:18px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);"></div>',
+            iconSize: [18, 18], iconAnchor: [9, 9], className: ''
+        });
+
+        var marker = L.marker([33.8938, 35.5018], { draggable: true, icon: icon }).addTo(map);
+        marker.bindPopup('📍 Your store location').openPopup();
+
+        // Drag → met à jour les champs
+        marker.on('dragend', function (e) {
+            var p = e.target.getLatLng();
+            setCoords(p.lat.toFixed(4), p.lng.toFixed(4));
+        });
+
+        // Click sur la carte → déplace le marqueur
+        map.on('click', function (e) {
+            marker.setLatLng(e.latlng);
+            setCoords(e.latlng.lat.toFixed(4), e.latlng.lng.toFixed(4));
+        });
+
+        function setCoords(lat, lng) {
+            document.getElementById('latInput').value = lat;
+            document.getElementById('lngInput').value = lng;
+        }
+
+        // Champs → met à jour la carte
+        function updateMapFromInputs() {
+            var lat = parseFloat(document.getElementById('latInput').value);
+            var lng = parseFloat(document.getElementById('lngInput').value);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                marker.setLatLng([lat, lng]);
+                map.setView([lat, lng], 14);
+            }
+        }
+
+        // ── Quick fill examples ───────────────────────────────
+        var examples = {
+            hamra: {
+                storeName: 'Hamra Money Exchange', ownerName: 'Rami Khalil',
+                phone: '+961 1 740 200', address: 'Hamra Street, Ras Beirut',
+                workingHours: 'Mon-Sat: 9AM-8PM', lat: 33.8959, lng: 35.4784
+            },
+            achrafieh: {
+                storeName: 'Achrafieh Fast Transfer', ownerName: 'Lara Gemayel',
+                phone: '+961 1 335 100', address: 'Sassine Square, Achrafieh, Beirut',
+                workingHours: 'Mon-Fri: 8AM-7PM, Sat: 9AM-5PM', lat: 33.8875, lng: 35.5136
+            },
+            verdun: {
+                storeName: 'Verdun Express Exchange', ownerName: 'Ziad Haddad',
+                phone: '+961 1 809 300', address: 'Verdun Street, Beirut',
+                workingHours: 'Mon-Sun: 8AM-9PM', lat: 33.8738, lng: 35.4892
+            }
+        };
+
+        function fillExample(key) {
+            var e = examples[key];
+            document.getElementById('storeName').value    = e.storeName;
+            document.getElementById('ownerName').value    = e.ownerName;
+            document.getElementById('phone').value        = e.phone;
+            document.getElementById('address').value      = e.address;
+            document.getElementById('workingHours').value = e.workingHours;
+            setCoords(e.lat, e.lng);
+            marker.setLatLng([e.lat, e.lng]);
+            map.setView([e.lat, e.lng], 15);
+            marker.openPopup();
+        }
+    </script>
+
 </body>
 </html>
