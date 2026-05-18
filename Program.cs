@@ -48,7 +48,7 @@ namespace MoneyTransferApp
 
             // ── 5. HttpClient pour les appels API Anthropic ────────
             builder.Services.AddHttpClient();
-            
+            builder.Services.AddTransient<MoneyTransferApp.Services.IEmailService, MoneyTransferApp.Services.EmailService>();
             var app = builder.Build();
 
             // ── 6. Seeders ────────────────────────────────────────

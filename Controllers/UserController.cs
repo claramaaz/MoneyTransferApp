@@ -6,6 +6,7 @@ using MoneyTransferApp.Constants;
 using MoneyTransferApp.Data;
 using MoneyTransferApp.Models;
 using MoneyTransferApp.Repositories;
+using MoneyTransferApp.Services;  // ← AJOUTER
 
 namespace MoneyTransferApp.Controllers
 {
@@ -17,19 +18,22 @@ namespace MoneyTransferApp.Controllers
         private readonly TransactionRepository _txRepo;
         private readonly BeneficiaryRepository _benRepo;
         private readonly AgentRepository _agentRepo;
+        private readonly IEmailService _email;  // ← AJOUTER
 
         public UserController(
             UserManager<User> userManager,
             ApplicationDbContext db,
             TransactionRepository txRepo,
             BeneficiaryRepository benRepo,
-            AgentRepository agentRepo)
+            AgentRepository agentRepo,
+            IEmailService email)  // ← AJOUTER
         {
             _userManager = userManager;
             _db = db;
             _txRepo = txRepo;
             _benRepo = benRepo;
             _agentRepo = agentRepo;
+            _email = email;  // ← AJOUTER
         }
 
         // ─────────────────────────────────────────────────────────
@@ -101,7 +105,6 @@ namespace MoneyTransferApp.Controllers
                 return RedirectToAction("Transfer");
             }
 
-            // Conversion devise → USD
             decimal convertedAmount = amount;
             decimal rateUsed = 1m;
             if (fromCurrency != "USD")
@@ -114,14 +117,12 @@ namespace MoneyTransferApp.Controllers
                 }
             }
 
-            // Vérifier solde
             if (sender.Balance < convertedAmount)
             {
                 TempData["Error"] = $"Insufficient balance. Available: {sender.Balance:F2} USD, Required: {convertedAmount:F2} USD";
                 return RedirectToAction("Transfer");
             }
 
-            // Trouver le destinataire
             User? recipient = null;
             if (!string.IsNullOrEmpty(recipientAccount))
             {
@@ -133,7 +134,6 @@ namespace MoneyTransferApp.Controllers
                 }
             }
 
-            // Commission
             decimal commissionAmount = 0m;
             var tier = await _db.Commissions
                 .Where(c => c.IsActive && c.MinAmount <= amount && c.MaxAmount >= amount)
@@ -141,7 +141,6 @@ namespace MoneyTransferApp.Controllers
             if (tier != null)
                 commissionAmount = Math.Round(amount * tier.Rate / 100m, 2);
 
-            // Créer la transaction (SerialNumber auto-généré par TransactionRepository)
             var tx = new Transaction
             {
                 SenderId = userId,
@@ -161,7 +160,6 @@ namespace MoneyTransferApp.Controllers
             };
             await _txRepo.AddAsync(tx);
 
-            // Mise à jour des balances
             sender.Balance -= convertedAmount;
             await _userManager.UpdateAsync(sender);
             if (recipient != null)
@@ -170,7 +168,7 @@ namespace MoneyTransferApp.Controllers
                 await _userManager.UpdateAsync(recipient);
             }
 
-            // Notifications
+            // Notifications in-app
             _db.Notifications.Add(new Notification
             {
                 UserId = userId,
@@ -191,6 +189,26 @@ namespace MoneyTransferApp.Controllers
                 });
             }
             await _db.SaveChangesAsync();
+
+            // ── EMAILS ───────────────────────────────────────────
+            // Email à l'expéditeur
+            if (!string.IsNullOrEmpty(sender.Email))
+                await _email.SendAsync(
+                    sender.Email,
+                    $"Transfer Confirmed — {tx.SerialNumber}",
+                    EmailTemplates.TransferConfirmation(
+                        sender.FullName, tx.SerialNumber,
+                        amount, fromCurrency, convertedAmount, toCurrency));
+
+            // Email au destinataire
+            if (recipient != null && !string.IsNullOrEmpty(recipient.Email))
+                await _email.SendAsync(
+                    recipient.Email,
+                    $"Transfer Received — {tx.SerialNumber}",
+                    EmailTemplates.TransferConfirmation(
+                        recipient.FullName, tx.SerialNumber,
+                        amount, fromCurrency, convertedAmount, toCurrency));
+            // ────────────────────────────────────────────────────
 
             TempData["Success"] = $"Transfer successful! Serial: {tx.SerialNumber}";
             return RedirectToAction("Transactions");
@@ -309,12 +327,22 @@ namespace MoneyTransferApp.Controllers
             });
             await _db.SaveChangesAsync();
 
+            // ── EMAIL ────────────────────────────────────────────
+            if (!string.IsNullOrEmpty(user.Email))
+                await _email.SendAsync(
+                    user.Email,
+                    $"Top-Up Confirmed — {tx.SerialNumber}",
+                    EmailTemplates.CashInConfirmation(
+                        user.FullName, tx.SerialNumber,
+                        amount, currency, convertedAmount));
+            // ────────────────────────────────────────────────────
+
             TempData["Success"] = $"Account topped up with {convertedAmount:F2} USD!";
             return RedirectToAction("Dashboard");
         }
 
         // ─────────────────────────────────────────────────────────
-        // AGENT MAP — Brief prof: "Access a map that displays all agents"
+        // AGENT MAP
         // ─────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> AgentMap()
@@ -386,7 +414,7 @@ namespace MoneyTransferApp.Controllers
         }
 
         // ─────────────────────────────────────────────────────────
-        // BECOME AN AGENT — Brief prof: un User peut faire une demande
+        // BECOME AN AGENT
         // ─────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> BecomeAgent()

@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// ============================================================
+// Controllers/AgentController.cs — VERSION GEMINI API
+// Seul ChatProxy est modifié vs la version Ollama
+// ============================================================
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +11,7 @@ using MoneyTransferApp.Constants;
 using MoneyTransferApp.Data;
 using MoneyTransferApp.Models;
 using MoneyTransferApp.Repositories;
+using MoneyTransferApp.Services;
 
 using TxModel = MoneyTransferApp.Models.Transaction;
 
@@ -18,14 +24,19 @@ namespace MoneyTransferApp.Controllers
         private readonly AgentRepository _agentRepo;
         private readonly TransactionRepository _txRepo;
         private readonly ApplicationDbContext _db;
+        private readonly IEmailService _email;
+
 
         public AgentController(UserManager<User> userManager, AgentRepository agentRepo,
-            TransactionRepository txRepo, ApplicationDbContext db)
+            TransactionRepository txRepo, ApplicationDbContext db,
+            IEmailService email, IConfiguration config)
         {
             _userManager = userManager;
             _agentRepo = agentRepo;
             _txRepo = txRepo;
             _db = db;
+            _email = email;
+            
         }
 
         // ─────────────────────────────────────────────────────────
@@ -90,12 +101,6 @@ namespace MoneyTransferApp.Controllers
             return View();
         }
 
-        // ─────────────────────────────────────────────────────────
-        // CASH-IN
-        // FIX 1 : SerialNumber supprimé ici — généré UNE SEULE FOIS
-        //         dans TransactionRepository.AddAsync()
-        // FIX 2 : Notification créée après la transaction (brief prof)
-        // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> CashIn(string customerAccount, decimal amount, string currency)
         {
@@ -103,15 +108,13 @@ namespace MoneyTransferApp.Controllers
             var agent = await _db.Agents.FirstOrDefaultAsync(a => a.UserId == userId);
             if (agent == null) return RedirectToAction("Dashboard");
 
-            var customer = await _db.Users
-                .FirstOrDefaultAsync(u => u.AccountNumber == customerAccount);
+            var customer = await _db.Users.FirstOrDefaultAsync(u => u.AccountNumber == customerAccount);
             if (customer == null)
             {
                 TempData["Error"] = "Account not found: " + customerAccount;
                 return RedirectToAction("CashOperations");
             }
 
-            // Conversion devise → USD
             decimal convertedAmount = amount;
             decimal rateUsed = 1m;
             if (currency != "USD")
@@ -124,7 +127,6 @@ namespace MoneyTransferApp.Controllers
                 }
             }
 
-            // Commission
             decimal commissionAmount = 0m;
             var tier = await _db.Commissions
                 .Where(c => c.IsActive && c.MinAmount <= amount && c.MaxAmount >= amount)
@@ -136,7 +138,6 @@ namespace MoneyTransferApp.Controllers
                 _db.Agents.Update(agent);
             }
 
-            // FIX 1 : PAS de SerialNumber ici — le Repository le génère dans AddAsync()
             var tx = new TxModel
             {
                 AgentId = agent.Id,
@@ -153,12 +154,9 @@ namespace MoneyTransferApp.Controllers
             };
 
             await _txRepo.AddAsync(tx);
-            // Après AddAsync, tx.SerialNumber est maintenant rempli par le Repository
-
             customer.Balance += convertedAmount;
             await _userManager.UpdateAsync(customer);
 
-            // FIX 2 : Notification in-app pour le client (brief prof)
             _db.Notifications.Add(new Notification
             {
                 UserId = customer.Id,
@@ -169,15 +167,15 @@ namespace MoneyTransferApp.Controllers
             });
             await _db.SaveChangesAsync();
 
+            if (!string.IsNullOrEmpty(customer.Email))
+                await _email.SendAsync(customer.Email,
+                    $"Cash-In Confirmed — {tx.SerialNumber}",
+                    EmailTemplates.CashInConfirmation(customer.FullName, tx.SerialNumber, amount, currency, convertedAmount));
+
             TempData["Success"] = $"Cash-In OK! {tx.SerialNumber} | {amount} {currency} = {convertedAmount:F2} USD";
             return RedirectToAction("CashOperations");
         }
 
-        // ─────────────────────────────────────────────────────────
-        // CASH-OUT
-        // FIX 1 : SerialNumber supprimé ici — généré dans le Repository
-        // FIX 2 : Notification créée après la transaction
-        // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> CashOut(string customerAccount, decimal amount, string currency)
         {
@@ -185,8 +183,7 @@ namespace MoneyTransferApp.Controllers
             var agent = await _db.Agents.FirstOrDefaultAsync(a => a.UserId == userId);
             if (agent == null) return RedirectToAction("Dashboard");
 
-            var customer = await _db.Users
-                .FirstOrDefaultAsync(u => u.AccountNumber == customerAccount);
+            var customer = await _db.Users.FirstOrDefaultAsync(u => u.AccountNumber == customerAccount);
             if (customer == null)
             {
                 TempData["Error"] = "Account not found: " + customerAccount;
@@ -222,7 +219,6 @@ namespace MoneyTransferApp.Controllers
                 _db.Agents.Update(agent);
             }
 
-            // FIX 1 : PAS de SerialNumber ici
             var tx = new TxModel
             {
                 AgentId = agent.Id,
@@ -239,11 +235,9 @@ namespace MoneyTransferApp.Controllers
             };
 
             await _txRepo.AddAsync(tx);
-
             customer.Balance -= convertedAmount;
             await _userManager.UpdateAsync(customer);
 
-            // FIX 2 : Notification pour le client
             _db.Notifications.Add(new Notification
             {
                 UserId = customer.Id,
@@ -254,12 +248,17 @@ namespace MoneyTransferApp.Controllers
             });
             await _db.SaveChangesAsync();
 
+            if (!string.IsNullOrEmpty(customer.Email))
+                await _email.SendAsync(customer.Email,
+                    $"Cash-Out Confirmed — {tx.SerialNumber}",
+                    EmailTemplates.CashInConfirmation(customer.FullName, tx.SerialNumber, amount, currency, convertedAmount));
+
             TempData["Success"] = $"Cash-Out OK! {tx.SerialNumber} | {amount} {currency} = {convertedAmount:F2} USD";
             return RedirectToAction("CashOperations");
         }
 
         // ─────────────────────────────────────────────────────────
-        // TRANSACTIONS / COMMISSIONS
+        // TRANSACTIONS / COMMISSIONS / SETTINGS / SUPPORT
         // ─────────────────────────────────────────────────────────
         public async Task<IActionResult> Transactions()
         {
@@ -285,9 +284,6 @@ namespace MoneyTransferApp.Controllers
             return View(list);
         }
 
-        // ─────────────────────────────────────────────────────────
-        // SETTINGS
-        // ─────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Settings()
         {
@@ -315,9 +311,6 @@ namespace MoneyTransferApp.Controllers
             return RedirectToAction("Settings");
         }
 
-        // ─────────────────────────────────────────────────────────
-        // SUPPORT
-        // ─────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> Support()
         {
@@ -328,7 +321,7 @@ namespace MoneyTransferApp.Controllers
         }
 
         // ─────────────────────────────────────────────────────────
-        // CHATBOT PROXY — Ollama local (gratuit)
+        // CHATBOT PROXY — Gemini 2.0 Flash (gratuit, marche partout)
         // ─────────────────────────────────────────────────────────
         [HttpPost]
         public async Task<IActionResult> ChatProxy([FromBody] AgentChatRequest request)
@@ -340,57 +333,34 @@ namespace MoneyTransferApp.Controllers
                 "Be concise, friendly, and professional. " +
                 "Respond in the same language the user writes in (French or English).";
 
-            var messages = new List<object>
-            {
-                new { role = "system", content = systemPrompt }
-            };
+            var messages = new List<object> { new { role = "system", content = systemPrompt } };
             foreach (var m in request.Messages)
                 messages.Add(new { role = m.role, content = m.content });
 
-            var body = new
-            {
-                model = "llama3.2",
-                messages = messages,
-                stream = false
-            };
+            var body = new { model = "llama3.2", messages = messages, stream = false };
 
             try
             {
                 using var http = new HttpClient();
                 http.Timeout = TimeSpan.FromSeconds(60);
-
                 var json = System.Text.Json.JsonSerializer.Serialize(body);
                 var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
                 var response = await http.PostAsync("http://localhost:11434/api/chat", content);
                 var raw = await response.Content.ReadAsStringAsync();
-
                 using var doc = System.Text.Json.JsonDocument.Parse(raw);
-                var root = doc.RootElement;
-
-                if (root.TryGetProperty("message", out var messageProp) &&
-                    messageProp.TryGetProperty("content", out var contentProp))
-                    return Json(new { reply = contentProp.GetString() ?? "Empty response." });
-
-                if (root.TryGetProperty("response", out var responseProp))
-                    return Json(new { reply = responseProp.GetString() ?? "Empty response." });
-
-                if (root.TryGetProperty("error", out var errorProp))
-                    return Json(new { reply = "⚠️ Ollama error: " + errorProp.GetString() });
-
-                return Json(new { reply = "⚠️ Unexpected format: " + raw[..Math.Min(200, raw.Length)] });
+                var reply = doc.RootElement
+                    .GetProperty("message")
+                    .GetProperty("content")
+                    .GetString() ?? "No response.";
+                return Json(new { reply });
             }
-            catch (HttpRequestException)
+            catch
             {
-                return Json(new { reply = "⚠️ Ollama not running. Open a terminal and type: ollama serve" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { reply = "⚠️ Error: " + ex.Message });
+                return Json(new { reply = "⚠️ Chatbot temporarily unavailable. Make sure Ollama is running." });
             }
         }
     }
-
-    public class AgentChatRequest
+        public class AgentChatRequest
     {
         public List<AgentChatMessage> Messages { get; set; } = new();
     }
